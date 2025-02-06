@@ -1,24 +1,46 @@
-import logo from './logo.svg';
-import './App.css';
+import "./App.css";
+import { Route, Routes, BrowserRouter } from "react-router-dom";
+import ChatBot from "./chat/ChatBot";
+import MainForm from "./common/commonForm/mainform";
+import { ThemeProvider } from "styled-components";
+import { lightTheme, darkTheme } from "./theme/theme";
+import { useState, useEffect } from "react";
 
 function App() {
+  const [isDarkMode, setIsDarkMode] = useState(
+    localStorage.getItem("isDarkMode") === "true"
+  );
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("isDarkMode");
+    if (savedTheme) {
+      setIsDarkMode(savedTheme === "true");
+    }
+  }, []);
+
+  const toggleDarkMode = () => {
+    setIsDarkMode(!isDarkMode);
+    localStorage.setItem("isDarkMode", !isDarkMode);
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <ThemeProvider theme={isDarkMode ? darkTheme : lightTheme}>
+      <BrowserRouter>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <MainForm
+                isDarkMode={isDarkMode}
+                toggleDarkMode={toggleDarkMode}
+              />
+            }
+          >
+            <Route path="chat" element={<ChatBot isDarkMode={isDarkMode} />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }
 
