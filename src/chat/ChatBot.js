@@ -100,10 +100,12 @@ const ChatBot = () => {
 
   // 채팅 관련 상태 관리
   const [inputMessage, setInputMessage] = useState("");
-  const [messages, setMessages] = useState([
-    { id: 1, text: "안녕하세요! 무엇을 도와드릴까요?", sender: "bot" },
-  ]);
+  const [messages, setMessages] = useState([]);
   const [isConnected, setIsConnected] = useState(false); // WebSocket 연결 상태
+
+  // 스트리밍 상태 추가
+  const [isStreaming, setIsStreaming] = useState(false);
+  const streamTimeoutRef = useRef(null);
 
   // === Refs ===
   const messageEndRef = useRef(null); // 스크롤 위치 관리용
@@ -138,7 +140,6 @@ const ChatBot = () => {
       }
       ws.current = new WebSocket(wsUrl);
 
-      // WebSocket 연결 성공 시
       ws.current.onopen = () => {
         console.log("Successfully connected to WebSocket");
         setIsConnected(true);
@@ -176,30 +177,53 @@ const ChatBot = () => {
             ? `${mainContent}\n\n참고문헌:\n${references}`
             : mainContent;
 
-          // 봇 응답 메시지 추가
-          const botMessage = {
-            id: messages.length + 2,
-            text: formattedText,
-            sender: "bot",
+          // 스트리밍 시작
+          setIsStreaming(true);
+          let currentText = "";
+          const textArray = formattedText.split("");
+          let currentIndex = 0;
+
+          // 봇 응답 메시지 초기 상태 추가
+          const botMessageId = messages.length + 2;
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: botMessageId,
+              text: "",
+              sender: "bot",
+            },
+          ]);
+
+          // 스트리밍 함수
+          const streamText = () => {
+            if (currentIndex < textArray.length) {
+              currentText += textArray[currentIndex];
+              setMessages((prev) =>
+                prev.map((msg) =>
+                  msg.id === botMessageId ? { ...msg, text: currentText } : msg
+                )
+              );
+              currentIndex++;
+              streamTimeoutRef.current = setTimeout(streamText, 20); // 20ms 간격으로 한 글자씩 출력
+            } else {
+              setIsStreaming(false);
+            }
           };
-          setMessages((prev) => [...prev, botMessage]);
+
+          streamText();
         }
       };
 
-      // 에러 처리
       ws.current.onerror = (error) => {
         console.error("WebSocket Error:", error);
-        handleError("WebSocket 연결 중 오류가 발생했습니다.");
       };
 
-      // 연결 종료 처리
       ws.current.onclose = () => {
         console.log("WebSocket connection closed");
         setIsConnected(false);
       };
     } catch (error) {
       console.error("WebSocket connection error:", error);
-      handleError("WebSocket 연결을 설정할 수 없습니다.");
     }
   };
 
@@ -220,7 +244,19 @@ const ChatBot = () => {
    */
   const handleSendMessage = (e) => {
     e.preventDefault();
-    if (inputMessage.trim() === "" || !ws.current || !isConnected) return;
+    if (inputMessage.trim() === "") return;
+
+    // 스트리밍 중에는 메시지 전송 방지
+    if (isStreaming) {
+      alert("이전 메시지가 출력 중입니다. 잠시만 기다려주세요.");
+      return;
+    }
+
+    // WebSocket 연결 상태 체크
+    if (!ws.current || !isConnected) {
+      alert("서버와 연결 중입니다. 잠시만 기다려주세요.");
+      return;
+    }
 
     // 사용자 메시지 UI 추가
     const newMessage = {
@@ -242,51 +278,34 @@ const ChatBot = () => {
     setInputMessage(""); // 입력창 초기화
   };
 
-  /**
-   * 에러 메시지 처리 함수
-   */
-  const handleError = (errorMessage) => {
-    const errorMsg = {
-      id: messages.length + 2,
-      text: errorMessage,
-      sender: "system",
-    };
-    setMessages((prev) => [...prev, errorMsg]);
-  };
-
   // 사용자 정보 제출 처리
   const handleUserInfoSubmit = async (userInfo) => {
     try {
-      console.log("User info submitted:", userInfo); // 임시 로깅
+      console.log("User info submitted:", userInfo);
       setShowUserInfoModal(false);
-      handleSuccess("사용자 정보가 성공적으로 저장되었습니다.");
     } catch (error) {
       console.error("Error saving user info:", error);
-      handleError("사용자 정보 저장 중 오류가 발생했습니다.");
     }
   };
 
   // 파일 업로드 처리
   const handleFileUpload = async (file) => {
     try {
-      console.log("File uploaded:", file); // 임시 로깅
+      console.log("File uploaded:", file);
       setShowFileUploadModal(false);
-      handleSuccess("파일이 성공적으로 업로드되었습니다.");
     } catch (error) {
       console.error("Error uploading file:", error);
-      handleError("파일 업로드 중 오류가 발생했습니다.");
     }
   };
 
-  // 성공 메시지 처리
-  const handleSuccess = (successMessage) => {
-    const successMsg = {
-      id: messages.length + 1,
-      text: successMessage,
-      sender: "system",
+  // 컴포넌트 cleanup 시 타이머 정리
+  useEffect(() => {
+    return () => {
+      if (streamTimeoutRef.current) {
+        clearTimeout(streamTimeoutRef.current);
+      }
     };
-    setMessages((prev) => [...prev, successMsg]);
-  };
+  }, []);
 
   /**
    * 채팅 UI 렌더링 함수
@@ -336,6 +355,35 @@ const ChatBot = () => {
       </ContentWrapper>
     );
   };
+
+  // 컴포넌트 마운트 시 초기 메시지 스트리밍
+  useEffect(() => {
+    const initialMessage = "안녕하세요! 무엇을 도와드릴까요?";
+    setIsStreaming(true);
+    let currentText = "";
+    const textArray = initialMessage.split("");
+    let currentIndex = 0;
+
+    const botMessageId = 1;
+    setMessages([{ id: botMessageId, text: "", sender: "bot" }]);
+
+    const streamText = () => {
+      if (currentIndex < textArray.length) {
+        currentText += textArray[currentIndex];
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === botMessageId ? { ...msg, text: currentText } : msg
+          )
+        );
+        currentIndex++;
+        streamTimeoutRef.current = setTimeout(streamText, 20);
+      } else {
+        setIsStreaming(false);
+      }
+    };
+
+    streamText();
+  }, []);
 
   return (
     <Contain>
