@@ -158,7 +158,7 @@ const SideBar = ({ toggleSideBar }) => {
               color={currentPath === "/information" ? "#263ed8" : "#8290ee"}
             />
           </IconBox>
-          <TextWrapper>신용정보</TextWrapper>
+          <TextWrapper>건강정보</TextWrapper>
         </ContentsBox>
         <ContentsBox
           to="/evaluation"
@@ -171,7 +171,7 @@ const SideBar = ({ toggleSideBar }) => {
               color={currentPath === "/evaluation" ? "#263ed8" : "#8290ee"}
             />
           </IconBox>
-          <TextWrapper>신용평가</TextWrapper>
+          <TextWrapper>건강평가</TextWrapper>
         </ContentsBox>
         <ContentsBox to="/chat" isActive={currentPath === "/chat"}>
           <IconBox>
@@ -180,7 +180,7 @@ const SideBar = ({ toggleSideBar }) => {
               color={currentPath === "/chat" ? "#263ed8" : "#8290ee"}
             />
           </IconBox>
-          <TextWrapper>문의사항</TextWrapper>
+          <TextWrapper>챗봇</TextWrapper>
         </ContentsBox>
         <Title>OTHERS</Title>
         <ContentsBox

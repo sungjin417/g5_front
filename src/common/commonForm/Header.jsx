@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import Logo from "../../img/background/CreditOnlyLogo.png";
+import Logo from "../../img/logo/logo.png";
 import logosearch from "../../img/loginImg/findglass.png";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { BsMoonStars, BsSunFill } from "react-icons/bs";
@@ -29,7 +29,7 @@ const HeaderContainer = styled.div`
 `;
 
 const LeftBox = styled.div`
-  width: 15%;
+  width: 16%;
   min-width: 117px;
   height: 100%;
   background-color: ${({ theme }) => theme.sideBar};
@@ -490,7 +490,7 @@ const Header = ({
         <LogoBox to="/mainpage" isHeader={isHeader}>
           <SymLogo />
         </LogoBox>
-        <LogoTitle to="/mainpage"></LogoTitle>
+        <LogoTitle to="/mainpage">테스트입니다.</LogoTitle>
       </LeftBox>
       <RightBox>
         <SearchBox ref={searchRef}>
