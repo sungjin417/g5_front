@@ -1,4 +1,5 @@
 import styled, { keyframes } from "styled-components";
+import { VscLoading } from "react-icons/vsc";
 
 const fadeIn = keyframes`
   from {
@@ -36,6 +37,15 @@ const dots = keyframes`
   }
 `;
 
+const spin = keyframes`
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+`;
+
 export const Contain = styled.div`
   width: 100%;
   height: 100%;
@@ -65,7 +75,9 @@ export const MessageBox = styled.div`
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: ${(props) =>
+    props.hasMessages ? "space-between" : "center"};
+  align-items: ${(props) => (props.hasMessages ? "" : "center")};
   padding: 20px;
   height: 100%;
   background-color: ${({ theme, isDarkMode }) =>
@@ -98,11 +110,13 @@ export const MessageSendBox = styled.div`
   padding: 10px;
   background-color: ${({ theme, isDarkMode }) =>
     isDarkMode ? theme.darkBackground : theme.lightBackground};
-  border-top: 1px solid
-    ${({ theme, isDarkMode }) => (isDarkMode ? theme.color : theme.color)};
+  border-top: ${(props) => (props.hasMessages ? "1px solid" : "none")};
+  border-color: ${({ theme, isDarkMode }) =>
+    isDarkMode ? theme.color : theme.color};
   display: flex;
   justify-content: center;
   align-items: center;
+  position: ${(props) => (props.hasMessages ? "relative" : "absolute")};
 
   @media screen and (max-width: 768px) {
     position: fixed;
@@ -188,6 +202,7 @@ export const MessageBubble = styled.div`
     font-size: 14px;
   }
 `;
+
 export const LoadingIndicator = styled.div`
   text-align: center;
   padding: 10px;
@@ -198,4 +213,9 @@ export const LoadingIndicator = styled.div`
     content: "...";
     animation: ${dots} 1.5s steps(5, end) infinite;
   }
+`;
+
+export const LoadingIcon = styled(VscLoading)`
+  font-size: 24px;
+  animation: ${spin} 1s linear infinite;
 `;

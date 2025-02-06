@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+
 import {
   Contain,
   Screen,
@@ -9,6 +10,7 @@ import {
   MessageSend,
   SendWrap,
   MessageBubble,
+  LoadingIcon,
 } from "./ChatBotStyles";
 import { CardWrapper, CardContainer, CardText } from "./ChatCardStyles";
 import { VscSend } from "react-icons/vsc";
@@ -107,6 +109,9 @@ const ChatBot = () => {
   const [isStreaming, setIsStreaming] = useState(false);
   const streamTimeoutRef = useRef(null);
 
+  // 로딩 상태 추가
+  const [isLoading, setIsLoading] = useState(false);
+
   // === Refs ===
   const messageEndRef = useRef(null); // 스크롤 위치 관리용
   const ws = useRef(null); // WebSocket 인스턴스 관리
@@ -149,6 +154,7 @@ const ChatBot = () => {
       ws.current.onmessage = (event) => {
         const data = JSON.parse(event.data);
         if (data.type === "chat.message") {
+          setIsLoading(false); // 메시지를 수신하면 로딩 상태 해제
           const response = data.message;
 
           // 응답 데이터 포맷팅
@@ -184,13 +190,14 @@ const ChatBot = () => {
           let currentIndex = 0;
 
           // 봇 응답 메시지 초기 상태 추가
-          const botMessageId = messages.length + 2;
+          const botMessageId = `bot_${Date.now()}`; // 고유 ID 생성
           setMessages((prev) => [
             ...prev,
             {
               id: botMessageId,
               text: "",
               sender: "bot",
+              timestamp: new Date().toISOString(),
             },
           ]);
 
@@ -204,7 +211,7 @@ const ChatBot = () => {
                 )
               );
               currentIndex++;
-              streamTimeoutRef.current = setTimeout(streamText, 20); // 20ms 간격으로 한 글자씩 출력
+              streamTimeoutRef.current = setTimeout(streamText, 20);
             } else {
               setIsStreaming(false);
             }
@@ -246,12 +253,6 @@ const ChatBot = () => {
     e.preventDefault();
     if (inputMessage.trim() === "") return;
 
-    // 스트리밍 중에는 메시지 전송 방지
-    if (isStreaming) {
-      alert("이전 메시지가 출력 중입니다. 잠시만 기다려주세요.");
-      return;
-    }
-
     // WebSocket 연결 상태 체크
     if (!ws.current || !isConnected) {
       alert("서버와 연결 중입니다. 잠시만 기다려주세요.");
@@ -259,12 +260,16 @@ const ChatBot = () => {
     }
 
     // 사용자 메시지 UI 추가
-    const newMessage = {
-      id: messages.length + 1,
+    const userMessage = {
+      id: `user_${Date.now()}`,
       text: inputMessage,
       sender: "user",
+      timestamp: new Date().toISOString(),
     };
-    setMessages((prev) => [...prev, newMessage]);
+    setMessages((prev) => [...prev, userMessage]);
+
+    // 로딩 상태 설정
+    setIsLoading(true); // 메시지를 전송하면 로딩 상태 설정
 
     // WebSocket으로 메시지 전송
     ws.current.send(
@@ -307,90 +312,60 @@ const ChatBot = () => {
     };
   }, []);
 
-  /**
-   * 채팅 UI 렌더링 함수
-   * - 설정 메뉴
-   * - 메시지 목록
-   * - 모달 컴포넌트
-   */
-  const renderContent = () => {
-    return (
-      <ContentWrapper>
-        <SettingsIcon onClick={() => setShowCards(!showCards)}>
-          <FiSettings />
-        </SettingsIcon>
-
-        <CardSection show={showCards}>
-          <CardWrapper>
-            <CardContainer onClick={() => setShowUserInfoModal(true)}>
-              <CardText>사용자 정보 입력</CardText>
-            </CardContainer>
-            <CardContainer onClick={() => setShowFileUploadModal(true)}>
-              <CardText>혈액 검사 파일 업로드</CardText>
-            </CardContainer>
-          </CardWrapper>
-        </CardSection>
-
-        <MessagePlace>
-          {messages.map((message, index) => (
-            <MessageBubble key={index} sender={message.sender}>
-              {message.text}
-            </MessageBubble>
-          ))}
-          <div ref={messageEndRef} />
-        </MessagePlace>
-
-        {showUserInfoModal && (
-          <UserInfoForm
-            onSubmit={handleUserInfoSubmit}
-            onClose={() => setShowUserInfoModal(false)}
-          />
-        )}
-        {showFileUploadModal && (
-          <FileUpload
-            onUpload={handleFileUpload}
-            onClose={() => setShowFileUploadModal(false)}
-          />
-        )}
-      </ContentWrapper>
-    );
-  };
-
-  // 컴포넌트 마운트 시 초기 메시지 스트리밍
-  useEffect(() => {
-    const initialMessage = "안녕하세요! 무엇을 도와드릴까요?";
-    setIsStreaming(true);
-    let currentText = "";
-    const textArray = initialMessage.split("");
-    let currentIndex = 0;
-
-    const botMessageId = 1;
-    setMessages([{ id: botMessageId, text: "", sender: "bot" }]);
-
-    const streamText = () => {
-      if (currentIndex < textArray.length) {
-        currentText += textArray[currentIndex];
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === botMessageId ? { ...msg, text: currentText } : msg
-          )
-        );
-        currentIndex++;
-        streamTimeoutRef.current = setTimeout(streamText, 20);
-      } else {
-        setIsStreaming(false);
-      }
-    };
-
-    streamText();
-  }, []);
+  // messages 배열의 길이에 따라 UI 상태 결정
+  const hasMessages = messages.length > 0;
 
   return (
     <Contain>
       <Screen>
-        <MessageBox>
-          {renderContent()}
-          <MessageSendBox>
+        <MessageBox hasMessages={hasMessages}>
+          <ContentWrapper>
+            <SettingsIcon onClick={() => setShowCards(!showCards)}>
+              <FiSettings />
+            </SettingsIcon>
+
+            <CardSection show={showCards}>
+              <CardWrapper>
+                <CardContainer onClick={() => setShowUserInfoModal(true)}>
+                  <CardText>사용자 정보 입력</CardText>
+                </CardContainer>
+                <CardContainer onClick={() => setShowFileUploadModal(true)}>
+                  <CardText>혈액 검사 파일 업로드</CardText>
+                </CardContainer>
+              </CardWrapper>
+            </CardSection>
+
+            <MessagePlace hasMessages={hasMessages}>
+              {messages.map((message, index) => (
+                <MessageBubble key={index} sender={message.sender}>
+                  {message.text}
+                </MessageBubble>
+              ))}
+              <div ref={messageEndRef} />
+            </MessagePlace>
+
+            {isLoading && (
+              <div style={{ textAlign: "center", margin: "20px 0" }}>
+                <LoadingIcon /> {/* 회전하는 로딩 아이콘 */}
+                <p style={{ marginTop: "10px" }}>로딩 중...</p>{" "}
+                {/* 로딩 메시지 */}
+              </div>
+            )}
+
+            {showUserInfoModal && (
+              <UserInfoForm
+                onSubmit={handleUserInfoSubmit}
+                onClose={() => setShowUserInfoModal(false)}
+              />
+            )}
+            {showFileUploadModal && (
+              <FileUpload
+                onUpload={handleFileUpload}
+                onClose={() => setShowFileUploadModal(false)}
+              />
+            )}
+          </ContentWrapper>
+          <MessageSendBox hasMessages={hasMessages}>
             <MessageSendWrap>
               <MessageSend
                 value={inputMessage}
