@@ -28,7 +28,6 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route
-            path="/"
             element={
               <MainForm
                 isDarkMode={isDarkMode}
@@ -36,7 +35,7 @@ function App() {
               />
             }
           >
-            <Route path="chat" element={<ChatBot isDarkMode={isDarkMode} />} />
+            <Route path="/" element={<ChatBot isDarkMode={isDarkMode} />} />
           </Route>
         </Routes>
       </BrowserRouter>

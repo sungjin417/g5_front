@@ -2,7 +2,7 @@ import { Outlet, useLocation } from "react-router-dom";
 import styled, { css, ThemeProvider } from "styled-components";
 import SideBar from "./SideBar";
 import Header from "./Header";
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import AlarmBar from "./AlarmBar";
 import { lightTheme, darkTheme } from "../../theme/theme";
 
