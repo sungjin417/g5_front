@@ -219,3 +219,8 @@ export const LoadingIcon = styled(VscLoading)`
   font-size: 24px;
   animation: ${spin} 1s linear infinite;
 `;
+export const DisclaimerMessage = styled.p`
+  font-size: 10px;
+  color: #666;
+  margin-bottom: 10px;
+`;

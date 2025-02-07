@@ -11,6 +11,7 @@ import {
   SendWrap,
   MessageBubble,
   LoadingIcon,
+  DisclaimerMessage,
 } from "./ChatBotStyles";
 import { CardWrapper, CardContainer, CardText } from "./ChatCardStyles";
 import { VscSend } from "react-icons/vsc";
@@ -383,6 +384,11 @@ const ChatBot = () => {
               </SendWrap>
             </MessageSendWrap>
           </MessageSendBox>
+          <DisclaimerMessage>
+            본 챗봇은 일반적인 영양 정보를 제공하며, 의료 전문가의 조언을 대체할
+            수 없습니다. 개인의 건강 상태에 따라 다를 수 있으므로, 정확한 상담은
+            담당 의사와 상의하시길 바랍니다.
+          </DisclaimerMessage>
         </MessageBox>
       </Screen>
     </Contain>
