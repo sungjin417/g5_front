@@ -220,6 +220,45 @@ const ChatBot = () => {
           };
 
           streamText();
+        } else if (data.type === "chat.error") {
+          // 오류 처리
+          setIsLoading(false); // 로딩 상태 해제
+          const errorMessage = data.message; // 백엔드에서 전달된 오류 메시지
+
+          // 챗봇 대화 형식으로 오류 메시지 추가
+          const errorMessageId = `error_${Date.now()}`; // 고유 ID 생성
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: errorMessageId,
+              text: "", // 초기 상태는 빈 문자열
+              sender: "bot",
+              timestamp: new Date().toISOString(),
+            },
+          ]);
+
+          // 스트리밍 시작
+          let currentErrorText = "";
+          const errorTextArray = errorMessage.split("");
+          let errorCurrentIndex = 0;
+
+          // 스트리밍 함수
+          const streamErrorText = () => {
+            if (errorCurrentIndex < errorTextArray.length) {
+              currentErrorText += errorTextArray[errorCurrentIndex];
+              setMessages((prev) =>
+                prev.map((msg) =>
+                  msg.id === errorMessageId
+                    ? { ...msg, text: currentErrorText }
+                    : msg
+                )
+              );
+              errorCurrentIndex++;
+              streamTimeoutRef.current = setTimeout(streamErrorText, 20);
+            }
+          };
+
+          streamErrorText(); // 오류 메시지 스트리밍 시작
         }
       };
 
