@@ -141,7 +141,7 @@ const ChatBot = () => {
     try {
       console.log("Attempting to connect to WebSocket...");
       // const wsUrl = process.env.REACT_APP_WEBSOCKET_URL;
-      const wsUrl = "ws://16.184.8.183:8000/ws/chat";
+      const wsUrl = "ws://54.181.1.232:8000/ws/chat";
       if (!wsUrl) {
         throw new Error("WebSocket URL is not configured");
       }
