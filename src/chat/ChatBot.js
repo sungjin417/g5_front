@@ -113,6 +113,8 @@ const ChatBot = () => {
   // 로딩 상태 추가
   const [isLoading, setIsLoading] = useState(false);
 
+  const [ocrResult, setOcrResult] = useState(""); // OCR 결과 상태
+
   // === Refs ===
   const messageEndRef = useRef(null); // 스크롤 위치 관리용
   const ws = useRef(null); // WebSocket 인스턴스 관리
@@ -225,40 +227,56 @@ const ChatBot = () => {
           setIsLoading(false); // 로딩 상태 해제
           const errorMessage = data.message; // 백엔드에서 전달된 오류 메시지
 
-          // 챗봇 대화 형식으로 오류 메시지 추가
-          const errorMessageId = `error_${Date.now()}`; // 고유 ID 생성
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: errorMessageId,
-              text: "", // 초기 상태는 빈 문자열
-              sender: "bot",
-              timestamp: new Date().toISOString(),
-            },
-          ]);
+          // errorMessage가 undefined 또는 null인지 확인
+          if (errorMessage === undefined || errorMessage === null) {
+            alert("알 수 없는 오류가 발생했습니다."); // 기본 오류 메시지
+            return; // 추가 처리 중단
+          }
 
-          // 스트리밍 시작
-          let currentErrorText = "";
-          const errorTextArray = errorMessage.split("");
-          let errorCurrentIndex = 0;
+          // errorMessage가 문자열인지 확인
+          if (typeof errorMessage === "string") {
+            // 챗봇 대화 형식으로 오류 메시지 추가
+            const errorMessageId = `error_${Date.now()}`; // 고유 ID 생성
+            setMessages((prev) => [
+              ...prev,
+              {
+                id: errorMessageId,
+                text: "", // 초기 상태는 빈 문자열
+                sender: "bot",
+                timestamp: new Date().toISOString(),
+              },
+            ]);
 
-          // 스트리밍 함수
-          const streamErrorText = () => {
-            if (errorCurrentIndex < errorTextArray.length) {
-              currentErrorText += errorTextArray[errorCurrentIndex];
-              setMessages((prev) =>
-                prev.map((msg) =>
-                  msg.id === errorMessageId
-                    ? { ...msg, text: currentErrorText }
-                    : msg
-                )
-              );
-              errorCurrentIndex++;
-              streamTimeoutRef.current = setTimeout(streamErrorText, 20);
-            }
-          };
+            // 스트리밍 시작
+            let currentErrorText = "";
+            const errorTextArray = errorMessage.split(""); // 문자열을 배열로 변환
+            let errorCurrentIndex = 0;
 
-          streamErrorText(); // 오류 메시지 스트리밍 시작
+            // 스트리밍 함수
+            const streamErrorText = () => {
+              if (errorCurrentIndex < errorTextArray.length) {
+                currentErrorText += errorTextArray[errorCurrentIndex];
+                setMessages((prev) =>
+                  prev.map((msg) =>
+                    msg.id === errorMessageId
+                      ? { ...msg, text: currentErrorText }
+                      : msg
+                  )
+                );
+                errorCurrentIndex++;
+                streamTimeoutRef.current = setTimeout(streamErrorText, 20);
+              }
+            };
+
+            streamErrorText(); // 오류 메시지 스트리밍 시작
+          } else {
+            // errorMessage가 문자열이 아닐 경우 기본 오류 메시지 처리
+            alert("알 수 없는 오류가 발생했습니다."); // 기본 오류 메시지
+          }
+        } else if (data.type === "send.error") {
+          // send_error 처리
+          const errorMessage = data.message; // send_error에서 전달된 오류 메시지
+          alert(`오류 발생: ${errorMessage}`); // 사용자에게 알림으로 표시
         }
       };
 
@@ -335,12 +353,27 @@ const ChatBot = () => {
   };
 
   // 파일 업로드 처리
-  const handleFileUpload = async (file) => {
+  const handleFileUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+
     try {
-      console.log("File uploaded:", file);
-      setShowFileUploadModal(false);
+      const response = await fetch("http://서버주소/ocr", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setOcrResult(data.result); // OCR 결과 저장
+      } else {
+        console.error("파일 업로드 실패");
+      }
     } catch (error) {
-      console.error("Error uploading file:", error);
+      console.error("오류 발생:", error);
     }
   };
 
@@ -364,7 +397,6 @@ const ChatBot = () => {
             <SettingsIcon onClick={() => setShowCards(!showCards)}>
               <FiSettings />
             </SettingsIcon>
-
             <CardSection show={showCards}>
               <CardWrapper>
                 <CardContainer onClick={() => setShowUserInfoModal(true)}>
@@ -375,7 +407,6 @@ const ChatBot = () => {
                 </CardContainer>
               </CardWrapper>
             </CardSection>
-
             <MessagePlace hasMessages={hasMessages}>
               {messages.map((message, index) => (
                 <MessageBubble key={index} sender={message.sender}>
@@ -384,7 +415,6 @@ const ChatBot = () => {
               ))}
               <div ref={messageEndRef} />
             </MessagePlace>
-
             {isLoading && (
               <div style={{ textAlign: "center", margin: "20px 0" }}>
                 <LoadingIcon /> {/* 회전하는 로딩 아이콘 */}
@@ -392,7 +422,6 @@ const ChatBot = () => {
                 {/* 로딩 메시지 */}
               </div>
             )}
-
             {showUserInfoModal && (
               <UserInfoForm
                 onSubmit={handleUserInfoSubmit}
@@ -405,6 +434,8 @@ const ChatBot = () => {
                 onClose={() => setShowFileUploadModal(false)}
               />
             )}
+            {ocrResult && <div>OCR 결과: {ocrResult}</div>}{" "}
+            {/* OCR 결과 표시 */}
           </ContentWrapper>
           <MessageSendBox hasMessages={hasMessages}>
             <MessageSendWrap>
