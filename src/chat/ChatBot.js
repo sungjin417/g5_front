@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 
 import {
   Contain,
@@ -17,7 +17,6 @@ import { CardWrapper, CardContainer, CardText } from "./ChatCardStyles";
 import { VscSend } from "react-icons/vsc";
 import { FiSettings } from "react-icons/fi";
 import UserInfoForm from "./UserInfoForm";
-import FileUpload from "./FileUpload";
 import styled from "styled-components";
 
 /**
@@ -90,6 +89,29 @@ const CardSection = styled.div`
   }
 `;
 
+// 모달 스타일 컴포넌트
+const Modal = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5); // 반투명 배경
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000; // 다른 요소 위에 표시
+`;
+
+// 모달 내용 스타일 컴포넌트
+const ModalContent = styled.div`
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  width: 400px; // 모달 너비
+`;
+
 /**
  * 채팅 봇 메인 컴포넌트
  * WebSocket을 통한 실시간 채팅 기능 구현
@@ -114,6 +136,9 @@ const ChatBot = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const [ocrResult, setOcrResult] = useState(""); // OCR 결과 상태
+
+  // 상태 추가: 업로드 결과를 저장할 상태
+  const [uploadResult, setUploadResult] = useState(null);
 
   // === Refs ===
   const messageEndRef = useRef(null); // 스크롤 위치 관리용
@@ -343,28 +368,55 @@ const ChatBot = () => {
   };
 
   // 파일 업로드 처리
-  const handleFileUpload = async (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-
+  const handleFileUpload = async (file, testDate) => {
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append("image", file);
+    formData.append("test_date", testDate);
 
     try {
-      const response = await fetch("http://서버주소/ocr", {
+      const response = await fetch("/api/ocr/upload-blood-test/", {
         method: "POST",
         body: formData,
+        headers: {
+          "X-CSRFToken": getCookie("csrftoken"), // CSRF 토큰 전송
+        },
+        credentials: "same-origin",
       });
 
-      if (response.ok) {
+      // 응답이 JSON인지 확인
+      const contentType = response.headers.get("content-type");
+      if (!response.ok) {
+        const errorData = await response.text(); // 오류 메시지를 텍스트로 읽기
+        throw new Error(errorData || "업로드 실패");
+      }
+
+      if (contentType && contentType.includes("application/json")) {
         const data = await response.json();
-        setOcrResult(data.result); // OCR 결과 저장
+        console.log("업로드 성공:", data);
+        setUploadResult(data); // 업로드 결과 상태 업데이트
       } else {
-        console.error("파일 업로드 실패");
+        throw new Error("서버에서 JSON 형식의 응답을 반환하지 않았습니다.");
       }
     } catch (error) {
-      console.error("오류 발생:", error);
+      console.error("파일 업로드 오류:", error);
+      // 오류 처리 (예: 오류 메시지 표시)
     }
+  };
+
+  // Add this function to get CSRF token
+  const getCookie = (name) => {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== "") {
+      const cookies = document.cookie.split(";");
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === name + "=") {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
   };
 
   // 컴포넌트 cleanup 시 타이머 정리
@@ -419,13 +471,49 @@ const ChatBot = () => {
               />
             )}
             {showFileUploadModal && (
-              <FileUpload
-                onUpload={handleFileUpload}
-                onClose={() => setShowFileUploadModal(false)}
-              />
+              <Modal>
+                <ModalContent>
+                  <h5>혈액 검사 결과 업로드</h5>
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      const fileInput = e.target.elements.imageFile.files[0];
+                      const testDate = e.target.elements.testDate.value;
+                      handleFileUpload(fileInput, testDate);
+                      setShowFileUploadModal(false); // 업로드 후 모달 닫기
+                    }}
+                  >
+                    <div>
+                      <label htmlFor="testDate">검사일자</label>
+                      <input type="date" name="testDate" required />
+                    </div>
+                    <div>
+                      <label htmlFor="imageFile">이미지 파일</label>
+                      <input
+                        type="file"
+                        name="imageFile"
+                        accept="image/*"
+                        required
+                      />
+                    </div>
+                    <button type="submit">업로드</button>
+                    <button
+                      type="button"
+                      onClick={() => setShowFileUploadModal(false)}
+                    >
+                      취소
+                    </button>
+                  </form>
+                </ModalContent>
+              </Modal>
             )}
-            {ocrResult && <div>OCR 결과: {ocrResult}</div>}{" "}
-            {/* OCR 결과 표시 */}
+            {/* 업로드 결과 표시 */}
+            {uploadResult && (
+              <div>
+                <h5>업로드 결과</h5>
+                <pre>{JSON.stringify(uploadResult, null, 2)}</pre>
+              </div>
+            )}
           </ContentWrapper>
           <MessageSendBox hasMessages={hasMessages}>
             <MessageSendWrap>
