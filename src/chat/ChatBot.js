@@ -264,7 +264,8 @@ const ChatBot = () => {
           streamErrorText(); // 오류 메시지 스트리밍 시작
         } else if (data.type === "send.error") {
           // send_error 처리
-          const errorMessage = data.message; // send_error에서 전달된 오류 메시지
+          const errorMessage = data.message;
+          setIsLoading(false); // send_error에서 전달된 오류 메시지
           alert(`오류 발생: ${errorMessage}`); // 사용자에게 알림으로 표시
         }
       };
