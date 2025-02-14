@@ -13,7 +13,7 @@ export const lightTheme = {
   drag: "#687bf7",
   shadow: "#90909040",
   chatHead: "#ffffff",
-  mb1: "#F6F5F2",
+  mb1: "#FEF9EC",
 };
 
 export const darkTheme = {

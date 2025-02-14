@@ -179,10 +179,15 @@ const ChatBot = () => {
   // 상태 추가: 업로드 결과를 저장할 상태
   const [uploadResult, setUploadResult] = useState(null);
 
+  // 플레이스홀더 상태 추가
+  const [placeholderVisible, setPlaceholderVisible] = useState(true);
+
   // === Refs ===
   const messageEndRef = useRef(null); // 스크롤 위치 관리용
   const ws = useRef(null); // WebSocket 인스턴스 관리
   const userId = "test_user"; // 임시 사용자 ID (실제 구현 시 인증 시스템과 연동 필요)
+
+  const textarea = useRef();
 
   /**
    * WebSocket 연결 설정 및 정리
@@ -394,7 +399,14 @@ const ChatBot = () => {
       })
     );
 
+    // 입력창 초기화
     setInputMessage(""); // 입력창 초기화
+    setPlaceholderVisible(true); // 플레이스홀더 다시 표시
+
+    // textarea 높이 초기화 및 줄어들게 하기
+    setTimeout(() => {
+      handleResizeHeight(); // 높이 조정
+    }, 0); // 다음 이벤트 루프에서 높이 조정
   };
 
   // 사용자 정보 제출 처리
@@ -473,6 +485,13 @@ const ChatBot = () => {
 
   // messages 배열의 길이에 따라 UI 상태 결정
   const hasMessages = messages.length > 0;
+
+  const handleResizeHeight = () => {
+    if (textarea.current) {
+      textarea.current.style.height = "44px"; // 높이 초기화
+      textarea.current.style.height = textarea.current.scrollHeight + "px"; // 현재 내용에 맞게 높이 조정
+    }
+  };
 
   return (
     <Contain>
@@ -579,15 +598,28 @@ const ChatBot = () => {
 
               <MessageSendWrap>
                 <MessageSend
+                  ref={textarea}
                   value={inputMessage}
-                  onChange={(e) => setInputMessage(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSendMessage(e);
+                  onChange={(e) => {
+                    setInputMessage(e.target.value);
+                    handleResizeHeight(); // 텍스트 영역 높이 조정
+                  }}
+                  onFocus={() => setPlaceholderVisible(false)} // 포커스 시 플레이스홀더 숨기기
+                  onBlur={() => {
+                    if (inputMessage.trim() === "") {
+                      setPlaceholderVisible(true); // 입력값이 없으면 플레이스홀더 다시 표시
                     }
                   }}
-                  placeholder="메시지를 입력하세요..."
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault(); // Enter 키의 기본 동작 방지
+                      handleSendMessage(e); // 메시지 전송 함수 호출
+                    }
+                  }}
+                  placeholder={
+                    placeholderVisible ? "메시지를 입력하세요..." : ""
+                  }
+                  style={{ resize: "none" }} // 사용자가 수동으로 크기를 조정하지 못하도록 설정
                 />
                 <SendWrap onClick={handleSendMessage}>
                   <VscSend />

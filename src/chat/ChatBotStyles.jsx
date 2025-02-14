@@ -141,21 +141,26 @@ export const MessageSendWrap = styled.div`
   }
 `;
 
-export const MessageSend = styled.input`
+export const MessageSend = styled.textarea`
   background-color: transparent;
   font-size: 15px;
   font-weight: lighter;
   width: 95%;
-  height: 40px;
+  height: 44px;
+  max-height: 20vh;
   border: none;
   border-radius: 20px;
   padding: 0 15px;
   color: ${({ theme, isDarkMode }) =>
     isDarkMode ? theme.lightText : theme.darkText};
   outline: none;
+  /* placeholder 스타일 */
   &::placeholder {
     color: #4545b8;
+    position: absolute;
+    padding: 10px;
   }
+
   @media screen and (max-width: 768px) {
     font-size: 14px;
   }
