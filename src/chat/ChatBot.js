@@ -15,7 +15,7 @@ import {
 } from "./ChatBotStyles";
 import { CardWrapper, CardContainer, CardText } from "./ChatCardStyles";
 import { VscSend, VscAdd } from "react-icons/vsc";
-import { FiSettings } from "react-icons/fi";
+import { FaArrowLeft } from "react-icons/fa";
 import UserInfoForm from "./UserInfoForm";
 import styled from "styled-components";
 
@@ -111,11 +111,13 @@ const Modal = styled.div`
 
 // 모달 내용 스타일 컴포넌트
 const ModalContent = styled.div`
+  display: flex;
   background: white;
   padding: 20px;
   border-radius: 8px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-  width: 400px; // 모달 너비
+  width: 400px;
+  flex-direction: column;
 `;
 
 // 스타일 컴포넌트 정의
@@ -135,11 +137,15 @@ const Input = styled.input`
 
 const UploadButton = styled.button`
   padding: 10px 15px;
+  margin-left: auto;
   border-radius: 5px;
   border: none;
-  background-color: #5a6acf;
+  background-color: #007bff;
   color: white;
   cursor: pointer;
+  &:hover {
+    background-color: #0056b3;
+  }
 `;
 
 const CancelButton = styled.button`
@@ -149,6 +155,28 @@ const CancelButton = styled.button`
   border: none;
   background-color: #ccc;
   cursor: pointer;
+`;
+const BackButton = styled.button`
+  top: 20px;
+  left: 20px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #007bff;
+
+  &:hover {
+    color: #0056b3;
+  }
+`;
+
+// 회전 스타일 정의
+const RotatingIcon = styled(VscAdd)`
+  transition: transform 0.3s ease; // 회전 애니메이션
+  transform: ${({ rotated }) =>
+    rotated ? "rotate(45deg)" : "rotate(0deg)"}; // 회전 상태에 따라 변환
 `;
 
 /**
@@ -161,6 +189,7 @@ const ChatBot = () => {
   const [showUserInfoModal, setShowUserInfoModal] = useState(false);
   const [showFileUploadModal, setShowFileUploadModal] = useState(false);
   const [showCards, setShowCards] = useState(false);
+  const [isRotated, setIsRotated] = useState(false); // 회전 상태 추가
 
   // 채팅 관련 상태 관리
   const [inputMessage, setInputMessage] = useState("");
@@ -524,7 +553,10 @@ const ChatBot = () => {
             {showFileUploadModal && (
               <Modal>
                 <ModalContent>
-                  <h5>혈액 검사 결과 업로드</h5>
+                  <BackButton onClick={() => setShowFileUploadModal(false)}>
+                    <FaArrowLeft /> 뒤로가기
+                  </BackButton>
+                  <h2>혈액 검사 결과 업로드</h2>
                   <form
                     onSubmit={(e) => {
                       e.preventDefault();
@@ -554,14 +586,8 @@ const ChatBot = () => {
                         required
                       />
                     </FormGroup>
-                    <UploadButton type="submit">업로드</UploadButton>
-                    <CancelButton
-                      type="button"
-                      onClick={() => setShowFileUploadModal(false)}
-                    >
-                      취소
-                    </CancelButton>
                   </form>
+                  <UploadButton type="submit">업로드</UploadButton>
                 </ModalContent>
               </Modal>
             )}
@@ -590,10 +616,14 @@ const ChatBot = () => {
             </CardSection>
             <MessageSendBox>
               <SettingsIcon
-                onClick={() => setShowCards(!showCards)}
+                onClick={() => {
+                  setShowCards(!showCards);
+                  setIsRotated(!isRotated); // 클릭 시 회전 상태 변경
+                }}
                 show={showCards}
               >
-                <VscAdd />
+                <RotatingIcon rotated={isRotated} />{" "}
+                {/* 회전 상태에 따라 아이콘 회전 */}
               </SettingsIcon>
 
               <MessageSendWrap>
