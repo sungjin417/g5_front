@@ -170,7 +170,7 @@ const UserToggle = ({ isOpen, setIsOpen, email }) => {
           isOpen={isOpen}
         >
           <IoReaderOutline size={20} color="gray" />
-          나의 신용
+          나의 건강 정보
         </MenuItem>
         <MenuItem ref={itemsRefs[1]} isOpen={isOpen}>
           <IoAtOutline size={20} color="gray" />
