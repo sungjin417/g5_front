@@ -39,20 +39,19 @@ const Contents = styled.div`
   }
 `;
 
-const MainForm = () => {
+const MainForm = ({
+  isDarkMode,
+  toggleDarkMode,
+  isAuthenticated,
+  setIsAuthenticated,
+}) => {
   const [isSideBarVisible, setIsSideBarVisible] = useState(true);
   const [isAlarmVisible, setIsAlarmVisible] = useState(false);
   const [isHeader, setIsHeader] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
   const location = useLocation();
   const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false);
   const isAnnouncement = location.pathname === "/announcement";
   const [isUserToggleVisible, setIsUserToggleVisible] = useState(false);
-
-  const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode);
-    localStorage.setItem("isDarkMode", !isDarkMode);
-  };
 
   // 사이드바의 가시성을 토글하는 함수
   const toggleSideBar = () => {
@@ -116,7 +115,12 @@ const MainForm = () => {
       />
       <Screen isAnnouncement={isAnnouncement}>
         {isSideBarVisible && (
-          <SideBar toggleSideBar={toggleSideBar} isDarkMode={isDarkMode} />
+          <SideBar
+            toggleSideBar={toggleSideBar}
+            isDarkMode={isDarkMode}
+            isAuthenticated={isAuthenticated}
+            setIsAuthenticated={setIsAuthenticated}
+          />
         )}
         <Contents>
           <Outlet

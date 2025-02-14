@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import styled, { css } from "styled-components";
 import {
   IoSettingsOutline,
@@ -9,6 +9,9 @@ import {
   IoTodayOutline,
   IoChatboxEllipsesOutline,
 } from "react-icons/io5";
+import { useState } from "react";
+import SignUp from "../../auth/SignUp";
+import Login from "../../auth/Login";
 
 const Sidebar = styled.div`
   width: 15%;
@@ -107,24 +110,71 @@ const TextWrapper = styled.div`
   padding-left: 5px;
 `;
 
-const SideBar = ({ toggleSideBar }) => {
+const AuthButton = styled(ContentsBox)`
+  background-color: ${({ theme }) => theme.background};
+  margin-top: 10px;
+`;
+
+const SideBar = ({
+  toggleSideBar,
+  isDarkMode,
+  isAuthenticated,
+  setIsAuthenticated,
+}) => {
+  const [showSignUp, setShowSignUp] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
+  const [currentUser, setCurrentUser] = useState(
+    JSON.parse(localStorage.getItem("currentUser"))
+  );
+
   const location = useLocation();
+  const navigate = useNavigate();
   const currentPath = location.pathname;
 
-  const handleMenuClick = () => {
+  const handleMenuClick = (e, path) => {
+    e.preventDefault();
+
+    if (!isAuthenticated) {
+      alert("로그인이 필요한 서비스입니다. 로그인 해주세요.");
+      return;
+    }
+
     if (window.innerWidth <= 1200) {
       toggleSideBar();
     }
+    navigate(path);
+  };
+
+  const handleLogin = (user) => {
+    setCurrentUser(user);
+    setIsAuthenticated(true);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("currentUser");
+    setCurrentUser(null);
+    setIsAuthenticated(false);
   };
 
   return (
     <Sidebar>
       <Menu>
-        <Title>MENU</Title>
+        {isAuthenticated ? (
+          <Title>Welcome, {currentUser?.id}</Title>
+        ) : (
+          <>
+            <AuthButton onClick={() => setShowSignUp(true)}>
+              <TextWrapper>회원가입하기</TextWrapper>
+            </AuthButton>
+            <AuthButton onClick={() => setShowLogin(true)}>
+              <TextWrapper>로그인하기</TextWrapper>
+            </AuthButton>
+          </>
+        )}
         <ContentsBox
           to="/mainpage"
           isActive={currentPath === "/mainpage"}
-          onClick={handleMenuClick}
+          onClick={(e) => handleMenuClick(e, "/mainpage")}
         >
           <IconBox>
             <IoBarChartOutline
@@ -137,7 +187,7 @@ const SideBar = ({ toggleSideBar }) => {
         <ContentsBox
           to="/announcement"
           isActive={currentPath === "/announcement"}
-          onClick={handleMenuClick}
+          onClick={(e) => handleMenuClick(e, "/announcement")}
         >
           <IconBox>
             <IoTodayOutline
@@ -150,7 +200,7 @@ const SideBar = ({ toggleSideBar }) => {
         <ContentsBox
           to="/information"
           isActive={currentPath === "/information"}
-          onClick={handleMenuClick}
+          onClick={(e) => handleMenuClick(e, "/information")}
         >
           <IconBox>
             <IoReaderOutline
@@ -163,7 +213,7 @@ const SideBar = ({ toggleSideBar }) => {
         <ContentsBox
           to="/evaluation"
           isActive={currentPath === "/evaluation"}
-          onClick={handleMenuClick}
+          onClick={(e) => handleMenuClick(e, "/evaluation")}
         >
           <IconBox>
             <IoNewspaperOutline
@@ -173,7 +223,11 @@ const SideBar = ({ toggleSideBar }) => {
           </IconBox>
           <TextWrapper>건강평가</TextWrapper>
         </ContentsBox>
-        <ContentsBox to="/chat" isActive={currentPath === "/chat"}>
+        <ContentsBox
+          to="/chat"
+          isActive={currentPath === "/chat"}
+          onClick={(e) => handleMenuClick(e, "/chat")}
+        >
           <IconBox>
             <IoChatbubbleEllipsesOutline
               size={20}
@@ -186,7 +240,7 @@ const SideBar = ({ toggleSideBar }) => {
         <ContentsBox
           to="/setting"
           isActive={currentPath === "/setting"}
-          onClick={handleMenuClick}
+          onClick={(e) => handleMenuClick(e, "/setting")}
         >
           <IconBox>
             <IoSettingsOutline
@@ -199,7 +253,7 @@ const SideBar = ({ toggleSideBar }) => {
         <ContentsBox
           to="/help"
           isActive={currentPath === "/help"}
-          onClick={handleMenuClick}
+          onClick={(e) => handleMenuClick(e, "/help")}
         >
           <IconBox>
             <IoChatboxEllipsesOutline
@@ -209,7 +263,17 @@ const SideBar = ({ toggleSideBar }) => {
           </IconBox>
           <TextWrapper>고객지원</TextWrapper>
         </ContentsBox>
+        {isAuthenticated && (
+          <AuthButton onClick={handleLogout}>
+            <TextWrapper>로그아웃</TextWrapper>
+          </AuthButton>
+        )}
       </Menu>
+
+      {showSignUp && <SignUp onClose={() => setShowSignUp(false)} />}
+      {showLogin && (
+        <Login onClose={() => setShowLogin(false)} onLogin={handleLogin} />
+      )}
     </Sidebar>
   );
 };
