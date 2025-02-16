@@ -13,15 +13,16 @@ import { useNavigate } from "react-router-dom";
 const staggerMenuItems = stagger(0.1, { startDelay: 0.15 });
 
 const MenuContainer = styled.nav`
-  position: fixed;
+  position: absolute;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   justify-content: flex-start;
-  top: 13px;
-  right: 8.5%;
+  top: 45px;
+  right: 0;
   width: 240px;
-  height: ${({ isOpen }) => (isOpen ? "250px" : "60px")};
+  height: ${({ isOpen }) => (isOpen ? "250px" : "0px")};
+  z-index: 1000;
   @media screen and (max-width: 425px) {
     right: 7%;
   }
@@ -92,11 +93,9 @@ const useMenuAnimation = (isOpen, refs) => {
   const [scope, animate] = useAnimate();
 
   useEffect(() => {
-    if (!refs) return;
+    if (!refs || !isOpen === undefined) return;
 
-    const { arrowRef, listRef, itemsRefs } = refs;
-
-    animate(arrowRef.current, { rotate: isOpen ? 180 : 0 }, { duration: 0.2 });
+    const { listRef, itemsRefs } = refs;
 
     animate(
       listRef.current,
@@ -113,16 +112,18 @@ const useMenuAnimation = (isOpen, refs) => {
     );
 
     itemsRefs.forEach((itemRef, index) => {
-      animate(
-        itemRef.current,
-        isOpen
-          ? { opacity: 1, scale: 1, filter: "blur(0px)" }
-          : { opacity: 0, scale: 0.3, filter: "blur(20px)" },
-        {
-          duration: 0.2,
-          delay: isOpen ? staggerMenuItems(index) : 0,
-        }
-      );
+      if (itemRef.current) {
+        animate(
+          itemRef.current,
+          isOpen
+            ? { opacity: 1, scale: 1, filter: "blur(0px)" }
+            : { opacity: 0, scale: 0.3, filter: "blur(20px)" },
+          {
+            duration: 0.2,
+            delay: isOpen ? staggerMenuItems(index) : 0,
+          }
+        );
+      }
     });
   }, [isOpen, animate, refs]);
 
@@ -131,12 +132,10 @@ const useMenuAnimation = (isOpen, refs) => {
 
 const UserToggle = ({ isOpen, setIsOpen, email }) => {
   const navigate = useNavigate();
-  const arrowRef = useRef(null);
   const listRef = useRef(null);
   const itemsRefs = [useRef(null), useRef(null), useRef(null), useRef(null)];
 
   const refs = {
-    arrowRef,
     listRef,
     itemsRefs,
   };
@@ -151,17 +150,12 @@ const UserToggle = ({ isOpen, setIsOpen, email }) => {
   };
 
   const logoutBtnHandler = () => {
-    localStorage.clear(); // 모든 로컬 스토리지 데이터 삭제
+    localStorage.clear();
     navigate("/");
   };
 
   return (
-    <MenuContainer ref={scope}>
-      <MenuButton whileTap={{ scale: 1.3 }} onClick={() => setIsOpen(!isOpen)}>
-        <ArrowIcon ref={arrowRef}>
-          <IoChevronDown size={18} color="#717694" />
-        </ArrowIcon>
-      </MenuButton>
+    <MenuContainer ref={scope} isOpen={isOpen}>
       <MenuList ref={listRef} isOpen={isOpen}>
         <MenuItem
           onClick={() => handleToggleClick("/evaluation")}

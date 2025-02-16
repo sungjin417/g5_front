@@ -106,13 +106,18 @@ export const MessagePlace = styled.div`
 `;
 
 export const MessageSendBox = styled.div`
-  width: 100%;
+  border: 1px solid;
+  background-color: ${({ theme }) => theme.sideBar};
+  display: flex;
+  flex-direction: column;
+  width: 80%;
   padding: 10px;
   background-color: ${({ theme, isDarkMode }) =>
     isDarkMode ? theme.darkBackground : theme.lightBackground};
   /* border-top: ${(props) => (props.hasMessages ? "1px solid" : "none")}; */
   border-color: ${({ theme, isDarkMode }) =>
     isDarkMode ? theme.color : theme.color};
+  border-radius: 20px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -143,24 +148,21 @@ export const MessageSendWrap = styled.div`
 
 export const MessageSend = styled.textarea`
   background-color: transparent;
+  color: ${({ theme }) => theme.color};
   font-size: 15px;
-  font-weight: lighter;
+  font-weight: bold;
+  line-height: 1.3;
   width: 95%;
   height: 44px;
   max-height: 20vh;
-  border: none;
+  border: none; 
   border-radius: 20px;
   padding: 0 15px;
-  color: ${({ theme, isDarkMode }) =>
-    isDarkMode ? theme.lightText : theme.darkText};
   outline: none;
   /* placeholder 스타일 */
   &::placeholder {
-    color: #4545b8;
-    position: absolute;
-    padding: 10px;
+    color: ${({ theme }) => theme.color};
   }
-
   @media screen and (max-width: 768px) {
     font-size: 14px;
   }
@@ -206,8 +208,7 @@ export const LoadingIndicator = styled.div`
   text-align: center;
   padding: 10px;
   font-style: italic;
-  color: ${({ theme, isDarkMode }) =>
-    isDarkMode ? theme.lightText : theme.darkText};
+ color: ${({ theme }) => theme.color};
   &:after {
     content: "...";
     animation: ${dots} 1.5s steps(5, end) infinite;

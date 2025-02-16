@@ -301,6 +301,7 @@ const UserBox = styled.div`
 `;
 
 const UserDiv = styled.div`
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -316,6 +317,7 @@ const UserProfile = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
+  
   @media screen and (max-width: 430px) {
     min-width: 30px;
   }
@@ -324,6 +326,7 @@ const UserProfile = styled.div`
 const UserImg = styled.div`
   width: 35px;
   height: 35px;
+  cursor: pointer;
   border-radius: 50%;
   background-image: ${({ imageurl }) => `url(${imageurl})`};
   background-size: contain;
@@ -469,9 +472,9 @@ const Header = ({
     <HeaderContainer>
       <LeftBox
         isHeader={isHeader}
-        style={{
-          backgroundColor: getLeftBoxBackgroundColor(), // 배경색 적용
-        }}
+        // style={{
+        //   backgroundColor: getLeftBoxBackgroundColor(), // 배경색 적용
+        // }}
       >
         <SideBarToggle onClick={toggleSideBar}>
           <IoMenuOutline size={30} color="#8290ee" />
@@ -538,16 +541,16 @@ const Header = ({
         </ToggleBox>
         <UserBox>
           <UserDiv>
-            <UserProfile>
-              <UserImg imageurl={imgUrl} />
+            <UserProfile >
+              <UserImg imageurl={imgUrl} onClick={toggleUserToggle}/>
             </UserProfile>
             <UserName>{user.name}</UserName>
+            <UserToggle
+              isOpen={isUserToggleVisible}
+              setIsOpen={toggleUserToggle}
+              email={user.email}
+            />
           </UserDiv>
-          <UserToggle
-            isOpen={isUserToggleVisible}
-            setIsOpen={toggleUserToggle}
-            email={user.email}
-          />
           <Dont />
           <AlarmSet onClick={toggleAlarmBar}>
             {hasUnreadNotifications ? (

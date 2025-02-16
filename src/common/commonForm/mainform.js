@@ -14,7 +14,6 @@ const Screen = styled.div`
   align-items: center;
   width: 100%;
   height: 91.9vh;
-  min-height: 700px;
   transition: background-color 0.5s ease, color 0.5s ease;
   @media screen and (max-width: 768px) {
   }

@@ -28,7 +28,7 @@ const SettingsIcon = styled.div`
   display: flex;
   cursor: pointer;
   font-size: 24px;
-  color: #5a6acf;
+  color: ${({ theme }) => theme.color};
   z-index: 100;
   align-items: center;
   justify-content: ${(props) => (props.show ? "flex-end" : "center")};
@@ -58,14 +58,20 @@ const ContentWrapper = styled.div`
  */
 
 const PlusBtn = styled.div`
-  width: 100%;
+  display: flex;
+  justify-content: center;
+  width: 80%;
   padding: 10px;
   position: ${(props) => (props.hasMessages ? "relative" : "absolute")};
+  @media screen and (max-width: 768px) {
+    width: 95%;
+  }
 `;
 const CardSection = styled.div`
   display: ${(props) => (props.show ? "block" : "none")};
   width: 16vw;
-  margin-left: 10vw;
+  bottom: 56px;
+  position: absolute;
   z-index: 99;
   background: rgba(255, 255, 255, 0.95);
   padding: 20px;
@@ -171,6 +177,25 @@ const BackButton = styled.button`
     color: #0056b3;
   }
 `;
+const MessageTop = styled.div`
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+`;
+const CardBox = styled.div`
+  width: 100%;
+  
+`;
+
+const MessageBottom = styled.div`
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+`;
+
+
+
 
 // 회전 스타일 정의
 const RotatingIcon = styled(VscAdd)`
@@ -600,7 +625,10 @@ const ChatBot = () => {
             )}
           </ContentWrapper>
           <PlusBtn hasMessages={hasMessages}>
-            <CardSection show={showCards}>
+            
+            <MessageSendBox>
+            <CardBox>
+              <CardSection show={showCards}>
               <CardWrapper>
                 <CardContainer onClick={() => setShowUserInfoModal(true)}>
                   <CardText>사용자 정보 입력</CardText>
@@ -614,20 +642,9 @@ const ChatBot = () => {
                 </CardContainer>
               </CardWrapper>
             </CardSection>
-            <MessageSendBox>
-              <SettingsIcon
-                onClick={() => {
-                  setShowCards(!showCards);
-                  setIsRotated(!isRotated); // 클릭 시 회전 상태 변경
-                }}
-                show={showCards}
-              >
-                <RotatingIcon rotated={isRotated} />{" "}
-                {/* 회전 상태에 따라 아이콘 회전 */}
-              </SettingsIcon>
-
-              <MessageSendWrap>
-                <MessageSend
+            </CardBox>
+              <MessageTop>
+              <MessageSend
                   ref={textarea}
                   value={inputMessage}
                   onChange={(e) => {
@@ -651,10 +668,25 @@ const ChatBot = () => {
                   }
                   style={{ resize: "none" }} // 사용자가 수동으로 크기를 조정하지 못하도록 설정
                 />
-                <SendWrap onClick={handleSendMessage}>
-                  <VscSend />
-                </SendWrap>
-              </MessageSendWrap>
+              </MessageTop>
+              
+              <MessageBottom>
+              
+              <SettingsIcon
+                onClick={() => {
+                  setShowCards(!showCards);
+                  setIsRotated(!isRotated); // 클릭 시 회전 상태 변경
+                }}
+                show={showCards}
+              >
+                <RotatingIcon rotated={isRotated} />{" "}
+                {/* 회전 상태에 따라 아이콘 회전 */}
+              </SettingsIcon>
+              <SendWrap onClick={handleSendMessage}>
+                <VscSend />
+              </SendWrap>
+              </MessageBottom>
+             
             </MessageSendBox>
           </PlusBtn>
           <DisclaimerMessage>
