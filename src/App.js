@@ -1,4 +1,3 @@
-
 import { Route, Routes, BrowserRouter, Navigate } from "react-router-dom";
 import ChatBot from "./chat/ChatBot";
 import MainForm from "./common/commonForm/mainform";

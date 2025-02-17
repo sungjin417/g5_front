@@ -281,15 +281,15 @@ const SideBar = ({
               $isSignUp={true}
               onClick={handleSignUpClick}
             >
-              <TextWrapper>회원가입하기</TextWrapper>
+              <TextWrapper>회원가입하</TextWrapper>
             </AuthButton>
             <AuthButton onClick={handleLoginClick}>
-              <TextWrapper>로그인하기</TextWrapper>
+              <TextWrapper>로그인하</TextWrapper>
             </AuthButton>
           </>
         ) : (
           <AuthButton $isFirstAuth={true} onClick={handleLogout}>
-            <TextWrapper>로그아웃</TextWrapper>
+            <TextWrapper>로그아</TextWrapper>
           </AuthButton>
         )}
       </Menu>
