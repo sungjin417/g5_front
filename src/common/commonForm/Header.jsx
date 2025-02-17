@@ -1,14 +1,15 @@
 import styled from "styled-components";
 import Logo from "../../img/logo/logo.png";
-import logosearch from "../../img/loginImg/findglass.png";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { BsMoonStars, BsSunFill } from "react-icons/bs";
 import { IoMenuOutline } from "react-icons/io5";
 import UserToggle from "./UserToggle";
-import { useCallback, useEffect, useRef, useState } from "react";
-import Alarm from "../../img/commonImg/알림.png";
-import AlarmDot from "../../img/commonImg/알림Dot.png";
+import { useState } from "react";
 import defaultProfile from "../../img/mainImg/pro.png";
+import SignUp from "../../auth/SignUp";
+import Login from "../../auth/Login";
+import { VscMenu, VscColorMode } from "react-icons/vsc";
+import { IoChevronDown } from "react-icons/io5";
 
 const HeaderContainer = styled.div`
   width: 100%;
@@ -40,8 +41,6 @@ const LeftBox = styled.div`
   flex-direction: row;
   justify-content: center;
   align-items: center;
-  @media screen and (max-width: 1200px) {
-  }
 `;
 
 const SideBarToggle = styled.div`
@@ -109,119 +108,6 @@ const LogoTitle = styled(Link)`
   }
 `;
 
-const SearchBox = styled.div`
-  width: 76%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  position: relative;
-  z-index: 1;
-  @media screen and (max-width: 1200px) {
-    width: 45%;
-  }
-`;
-const SearchInputDiv = styled.div`
-  width: 100%;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  @media screen and (max-width: 430px) {
-    font-size: 8px;
-  }
-`;
-const SearchInput = styled.input.attrs({ type: "text" })`
-  display: flex;
-  width: 85%;
-  height: 30%;
-  padding: 2%;
-  background-color: ${({ theme }) => theme.commponent};
-  color: ${({ theme }) => theme.color};
-  transition: background-color 0.5s ease, color 0.5s ease;
-  font-size: 12px;
-  border: none;
-  border-radius: 5px;
-  outline: none;
-  &:focus {
-    border: 1px solid darkgray;
-  }
-  @media screen and (max-width: 430px) {
-    font-size: 8px;
-    justify-content: flex-start;
-  }
-`;
-const SearchOutputDiv = styled.div`
-  width: 40vw;
-  max-height: 38vh; // 최대 높이 설정
-  border: 1px solid darkgray;
-  position: absolute; // 입력창을 가리지 않도록
-  top: 100%; // 입력창의 바로 아래에 위치시킴
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  overflow-y: auto; // 내용이 넘칠 경우 스크롤
-  background-color: transparent; // 배경색 설정
-  border-radius: 5px;
-  z-index: 100; // 입력창 위에 표시되도록
-`;
-
-const SearchOutput = styled.div`
-  width: 100%;
-  height: 100%;
-  padding: 2%;
-  font-size: 15px;
-  border: none;
-  border-radius: 5px;
-  outline: none;
-  display: flex;
-  justify-content: space-evenly;
-  align-items: center;
-  z-index: 1;
-  background-color: ${({ theme }) => theme.commponent};
-  color: ${({ theme }) => theme.color};
-  cursor: ${({ result }) => (result ? "pointer" : "default")};
-  transition: transform 0.3s ease, box-shadow 0.3s ease, color 0.3s ease;
-
-  & > .title {
-    font-weight: 600;
-  }
-  & > .contents {
-    font-size: 14px;
-  }
-
-  &:hover {
-    ${({ result }) =>
-      result &&
-      `
-      transform: scale(0.95);
-      box-shadow: 0px 4px 7px rgba(0, 0, 0, 0.4);
-      color:  #5549f7;
-    `}
-  }
-  @media screen and (max-width: 500px) {
-    flex-direction: column;
-  }
-`;
-
-const Searchlogo = styled.img`
-  width: 15px;
-  height: 15px;
-  cursor: pointer;
-  position: absolute;
-  margin-left: 80%;
-  &:hover {
-    transform: scale(1.05);
-  }
-  @media screen and (max-width: 430px) {
-    width: 10px;
-    height: 10px;
-    margin-left: 70%;
-  }
-`;
-
 const IconWrapper = styled.div`
   display: flex;
   justify-content: center;
@@ -251,7 +137,6 @@ const Toggle = styled.div`
   background-color: ${({ theme }) => theme.toggle};
   border-radius: 104px;
   box-shadow: 2px 2px 6px #90909040;
-  /* border: 1px solid #c0c0c0; */
   overflow: hidden;
   display: flex;
   justify-content: center;
@@ -306,7 +191,7 @@ const UserDiv = styled.div`
   align-items: center;
   justify-content: center;
   flex-direction: row;
-  width: 30%;
+  width: 60%;
   height: 100%;
 `;
 
@@ -317,7 +202,7 @@ const UserProfile = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  
+
   @media screen and (max-width: 430px) {
     min-width: 30px;
   }
@@ -353,6 +238,7 @@ const UserName = styled.div`
     display: none;
   }
 `;
+
 const Dont = styled.div`
   width: 25%;
   height: 100%;
@@ -360,122 +246,80 @@ const Dont = styled.div`
     width: 40%;
   }
 `;
-const AlarmSet = styled.div`
-  width: 25px;
-  height: 100%;
-  z-index: 1;
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
+
+const AuthButton = styled.button`
+  background-color: ${({ $isFirstAuth }) =>
+    $isFirstAuth ? "#5a67ba" : "#c0c0c0"};
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
   cursor: pointer;
+  border-radius: 5px;
   &:hover {
-    opacity: 0.6;
+    background-color: ${({ $isFirstAuth }) =>
+      $isFirstAuth ? "#4a55a2" : "#a0a0a0"};
   }
 `;
 
-const IconAlarm = styled.div`
-  width: 25px;
-  height: 25px;
-  background-image: ${({ imageurl }) => `url(${imageurl})`};
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
+const TextWrapper = styled.span`
+  margin-left: 10px;
 `;
 
 const Header = ({
   toggleSideBar,
-  toggleAlarmBar,
   isHeader,
   toggleDarkMode,
   isDarkMode,
-  hasUnreadNotifications,
   toggleUserToggle,
   isUserToggleVisible,
+  isAuthenticated,
+  setIsAuthenticated,
 }) => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [searchComplete, setSearchComplete] = useState(false);
-  const [searchData, setSearchData] = useState([]);
-  const [imgUrl, setImgUrl] = useState(defaultProfile);
-  const searchRef = useRef(null);
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  // 더미 유저 데이터
-  const [user, setUser] = useState({
-    name: "사용자",
-    email: "user@example.com",
+  const [showLogin, setShowLogin] = useState(false);
+  const [showSignUp, setShowSignUp] = useState(false);
+  const [currentUser, setCurrentUser] = useState(() => {
+    const user = localStorage.getItem("currentUser");
+    return user ? JSON.parse(user) : null;
   });
 
-  const handleSearch = () => {
-    // 더미 검색 결과
-    const dummySearchResults = [
-      {
-        id: 1,
-        title: "검색 결과 1",
-        contents: "검색 결과 내용 1",
-        page: "information",
-      },
-      {
-        id: 2,
-        title: "검색 결과 2",
-        contents: "검색 결과 내용 2",
-        page: "announcement",
-      },
-    ];
-    setSearchData(dummySearchResults);
-    setSearchComplete(true);
-    setSearchTerm("");
-  };
-
-  // LeftBox 배경색을 결정하는 함수
-  const getLeftBoxBackgroundColor = () => {
-    if (location.pathname === "/chat") {
-      return isDarkMode ? "#242424" : "#fff";
-    } else {
-      return "theme.sideBar";
-    }
-  };
-
-  // 엔터로 검색
-  const handleKeyPress = (e) => {
-    if (e.key === "Enter") {
-      handleSearch();
-    }
-  };
-
-  // 내용을 15단어로 제한하고 말줄임표를 추가하는 함수
-  const truncateContent = (content) => {
-    const words = content.split(" ");
-    if (words.length > 15) {
-      return words.slice(0, 15).join(" ") + "...";
-    }
-    return content;
-  };
-  const handleClickOutside = useCallback((event) => {
-    if (searchRef.current && !searchRef.current.contains(event.target)) {
-      setSearchComplete(false);
-    }
-  }, []);
-  useEffect(() => {
-    if (searchComplete) {
-      window.addEventListener("click", handleClickOutside);
-    } else {
-      window.removeEventListener("click", handleClickOutside);
-    }
-
-    return () => {
-      window.removeEventListener("click", handleClickOutside);
+  const handleLogin = (userData) => {
+    const user = {
+      id: userData.id,
+      username: userData.id, // id를 username으로 사용
     };
-  }, [searchComplete, handleClickOutside]);
+    localStorage.setItem("currentUser", JSON.stringify(user));
+    setCurrentUser(user);
+    setIsAuthenticated(true);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("currentUser");
+    setCurrentUser(null);
+    if (setIsAuthenticated) {
+      setIsAuthenticated(false);
+    }
+  };
+
+  const handleSignUpClick = () => {
+    if (!showLogin) {
+      setShowSignUp(true);
+    }
+  };
+
+  const handleLoginClick = () => {
+    if (!showSignUp) {
+      setShowLogin(true);
+    }
+  };
 
   return (
     <HeaderContainer>
-      <LeftBox
-        isHeader={isHeader}
-        // style={{
-        //   backgroundColor: getLeftBoxBackgroundColor(), // 배경색 적용
-        // }}
-      >
+      <LeftBox isHeader={isHeader}>
         <SideBarToggle onClick={toggleSideBar}>
           <IoMenuOutline size={30} color="#8290ee" />
         </SideBarToggle>
@@ -483,48 +327,6 @@ const Header = ({
           <SymLogo />
         </LogoBox>
         <LogoTitle to="/mainpage">테스트입니다.</LogoTitle>
-        <SearchBox ref={searchRef}>
-          <SearchInputDiv>
-            <SearchInput
-              placeholder="검색어를 입력해주세요."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              onKeyDown={handleKeyPress}
-            />
-            <Searchlogo src={logosearch} onClick={handleSearch} />
-          </SearchInputDiv>
-          {searchComplete && (
-            <SearchOutputDiv>
-              {searchData.length > 0 ? (
-                searchData.map((item) => (
-                  <SearchOutput
-                    result={true}
-                    key={item.id}
-                    onClick={() => {
-                      if (item.page === "information") {
-                        navigate(`/news/${item.id}`);
-                      } else if (item.page === "announcement") {
-                        navigate(`/${item.page}/news`);
-                      } else {
-                        navigate(`/${item.page}`);
-                      }
-                      setSearchComplete(false);
-                    }}
-                  >
-                    <div className="title">{item.title}</div>
-                    <div className="contents">
-                      {truncateContent(item.contents)}
-                    </div>
-                  </SearchOutput>
-                ))
-              ) : (
-                <SearchOutput result={false}>
-                  <div className="noResult">검색 결과가 없습니다.</div>
-                </SearchOutput>
-              )}
-            </SearchOutputDiv>
-          )}
-        </SearchBox>
       </LeftBox>
       <RightBox>
         <ToggleBox>
@@ -540,32 +342,46 @@ const Header = ({
           </Toggle>
         </ToggleBox>
         <UserBox>
-          <UserDiv>
-            <UserProfile >
-              <UserImg imageurl={imgUrl} onClick={toggleUserToggle}/>
-            </UserProfile>
-            <UserName>{user.name}</UserName>
-            <UserToggle
-              isOpen={isUserToggleVisible}
-              setIsOpen={toggleUserToggle}
-              email={user.email}
-            />
-          </UserDiv>
+          {!isAuthenticated ? (
+            <>
+              <AuthButton $isFirstAuth={true} onClick={handleSignUpClick}>
+                <TextWrapper>회원가입하기</TextWrapper>
+              </AuthButton>
+              <AuthButton onClick={handleLoginClick}>
+                <TextWrapper>로그인하기</TextWrapper>
+              </AuthButton>
+            </>
+          ) : (
+            <>
+              <UserDiv>
+                <UserProfile>
+                  <UserImg
+                    imageurl={currentUser?.imageUrl || defaultProfile}
+                    onClick={toggleUserToggle}
+                  />
+                </UserProfile>
+                <UserName>{currentUser?.username || "사용자"}</UserName>
+                <UserToggle
+                  isOpen={isUserToggleVisible}
+                  setIsOpen={toggleUserToggle}
+                  email={currentUser?.username || "사용자"}
+                />
+              </UserDiv>
+              <AuthButton $isFirstAuth={true} onClick={handleLogout}>
+                <TextWrapper>로그아웃</TextWrapper>
+              </AuthButton>
+            </>
+          )}
           <Dont />
-          <AlarmSet onClick={toggleAlarmBar}>
-            {hasUnreadNotifications ? (
-              // <VscBellDot size={25} color="#ffd400" />
-
-              <IconAlarm imageurl={AlarmDot} />
-            ) : (
-              // <VscBell size={25} color="#717694" />
-
-              <IconAlarm imageurl={Alarm} />
-            )}
-          </AlarmSet>
         </UserBox>
       </RightBox>
+
+      {showSignUp && <SignUp onClose={() => setShowSignUp(false)} />}
+      {showLogin && (
+        <Login onClose={() => setShowLogin(false)} onLogin={handleLogin} />
+      )}
     </HeaderContainer>
   );
 };
+
 export default Header;

@@ -60,7 +60,7 @@ const ContentWrapper = styled.div`
 const PlusBtn = styled.div`
   display: flex;
   justify-content: center;
-  width: 80%;
+  width: 50%;
   padding: 10px;
   position: ${(props) => (props.hasMessages ? "relative" : "absolute")};
   @media screen and (max-width: 768px) {
@@ -185,7 +185,6 @@ const MessageTop = styled.div`
 `;
 const CardBox = styled.div`
   width: 100%;
-  
 `;
 
 const MessageBottom = styled.div`
@@ -193,9 +192,6 @@ const MessageBottom = styled.div`
   width: 100%;
   justify-content: space-between;
 `;
-
-
-
 
 // 회전 스타일 정의
 const RotatingIcon = styled(VscAdd)`
@@ -625,26 +621,25 @@ const ChatBot = () => {
             )}
           </ContentWrapper>
           <PlusBtn hasMessages={hasMessages}>
-            
             <MessageSendBox>
-            <CardBox>
-              <CardSection show={showCards}>
-              <CardWrapper>
-                <CardContainer onClick={() => setShowUserInfoModal(true)}>
-                  <CardText>사용자 정보 입력</CardText>
-                </CardContainer>
-                <CardContainer onClick={() => setShowFileUploadModal(true)}>
-                  <CardText>
-                    혈액 검사 파일
-                    <br />
-                    업로드
-                  </CardText>
-                </CardContainer>
-              </CardWrapper>
-            </CardSection>
-            </CardBox>
+              <CardBox>
+                <CardSection show={showCards}>
+                  <CardWrapper>
+                    <CardContainer onClick={() => setShowUserInfoModal(true)}>
+                      <CardText>사용자 정보 입력</CardText>
+                    </CardContainer>
+                    <CardContainer onClick={() => setShowFileUploadModal(true)}>
+                      <CardText>
+                        혈액 검사 파일
+                        <br />
+                        업로드
+                      </CardText>
+                    </CardContainer>
+                  </CardWrapper>
+                </CardSection>
+              </CardBox>
               <MessageTop>
-              <MessageSend
+                <MessageSend
                   ref={textarea}
                   value={inputMessage}
                   onChange={(e) => {
@@ -669,24 +664,22 @@ const ChatBot = () => {
                   style={{ resize: "none" }} // 사용자가 수동으로 크기를 조정하지 못하도록 설정
                 />
               </MessageTop>
-              
+
               <MessageBottom>
-              
-              <SettingsIcon
-                onClick={() => {
-                  setShowCards(!showCards);
-                  setIsRotated(!isRotated); // 클릭 시 회전 상태 변경
-                }}
-                show={showCards}
-              >
-                <RotatingIcon rotated={isRotated} />{" "}
-                {/* 회전 상태에 따라 아이콘 회전 */}
-              </SettingsIcon>
-              <SendWrap onClick={handleSendMessage}>
-                <VscSend />
-              </SendWrap>
+                <SettingsIcon
+                  onClick={() => {
+                    setShowCards(!showCards);
+                    setIsRotated(!isRotated); // 클릭 시 회전 상태 변경
+                  }}
+                  show={showCards}
+                >
+                  <RotatingIcon rotated={isRotated} />{" "}
+                  {/* 회전 상태에 따라 아이콘 회전 */}
+                </SettingsIcon>
+                <SendWrap onClick={handleSendMessage}>
+                  <VscSend />
+                </SendWrap>
               </MessageBottom>
-             
             </MessageSendBox>
           </PlusBtn>
           <DisclaimerMessage>

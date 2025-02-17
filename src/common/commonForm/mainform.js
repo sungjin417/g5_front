@@ -3,7 +3,6 @@ import styled, { css, ThemeProvider } from "styled-components";
 import SideBar from "./SideBar";
 import Header from "./Header";
 import { useEffect, useState } from "react";
-import AlarmBar from "./AlarmBar";
 import { lightTheme, darkTheme } from "../../theme/theme";
 
 const Screen = styled.div`
@@ -45,10 +44,8 @@ const MainForm = ({
   setIsAuthenticated,
 }) => {
   const [isSideBarVisible, setIsSideBarVisible] = useState(true);
-  const [isAlarmVisible, setIsAlarmVisible] = useState(false);
   const [isHeader, setIsHeader] = useState(false);
   const location = useLocation();
-  const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false);
   const isAnnouncement = location.pathname === "/announcement";
   const [isUserToggleVisible, setIsUserToggleVisible] = useState(false);
 
@@ -58,20 +55,6 @@ const MainForm = ({
     setIsHeader(!isHeader);
   };
 
-  // 알림바의 가시성을 토글하는 함수
-  const toggleAlarmBar = () => {
-    setIsAlarmVisible(!isAlarmVisible);
-    if (isUserToggleVisible) {
-      setIsUserToggleVisible(false);
-    }
-  };
-
-  const toggleUserToggle = () => {
-    setIsUserToggleVisible(!isUserToggleVisible);
-    if (isAlarmVisible) {
-      setIsAlarmVisible(false);
-    }
-  };
   // 화면 크기 변화에 따라 사이드바를 숨기거나 보이게 설정하는 함수
   const handleResize = () => {
     if (window.innerWidth < 1201) {
@@ -95,22 +78,21 @@ const MainForm = ({
     };
   }, []);
 
-  // location이 변경될 때 알림바를 닫음
-  // useEffect(() => {
-  //   setIsAlarmVisible(false);
-  // }, [location]);
+  const toggleUserToggle = () => {
+    setIsUserToggleVisible(!isUserToggleVisible);
+  };
 
   return (
     <ThemeProvider theme={isDarkMode ? darkTheme : lightTheme}>
       <Header
         toggleSideBar={toggleSideBar}
-        toggleAlarmBar={toggleAlarmBar}
         isHeader={isHeader}
         toggleDarkMode={toggleDarkMode}
         isDarkMode={isDarkMode}
-        hasUnreadNotifications={hasUnreadNotifications}
         toggleUserToggle={toggleUserToggle}
         isUserToggleVisible={isUserToggleVisible}
+        isAuthenticated={isAuthenticated}
+        setIsAuthenticated={setIsAuthenticated}
       />
       <Screen isAnnouncement={isAnnouncement}>
         {isSideBarVisible && (
@@ -124,20 +106,10 @@ const MainForm = ({
         <Contents>
           <Outlet
             context={{
-              setHasUnreadNotifications,
               isDarkMode,
             }}
           />
         </Contents>
-        {isAlarmVisible && (
-          <AlarmBar
-            toggleAlarmBar={toggleAlarmBar}
-            setHasUnreadNotifications={setHasUnreadNotifications}
-            hasUnreadNotifications={hasUnreadNotifications}
-            isVisible={isAlarmVisible}
-            isDarkMode={isDarkMode}
-          />
-        )}
       </Screen>
     </ThemeProvider>
   );
