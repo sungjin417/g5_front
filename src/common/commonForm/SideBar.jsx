@@ -107,12 +107,17 @@ const TextWrapper = styled.div`
   font-size: 13px;
   font-weight: 500;
   letter-spacing: 0.5px;
-  padding-left: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 `;
 
 const AuthButton = styled(ContentsBox)`
   background-color: ${({ theme }) => theme.background};
-  margin-top: 10px;
+  margin-top: ${(props) => (props.$isFirstAuth ? "300px" : "10px")};
+  margin-bottom: 10px;
+  border-radius: 50px;
+  height: 30px;
 `;
 
 const SideBar = ({
@@ -156,21 +161,24 @@ const SideBar = ({
     setIsAuthenticated(false);
   };
 
+  const handleSignUpClick = () => {
+    if (!showLogin) {
+      // 로그인 창이 열려있지 않을 때만 회원가입 창 열기
+      setShowSignUp(true);
+    }
+  };
+
+  const handleLoginClick = () => {
+    if (!showSignUp) {
+      // 회원가입 창이 열려있지 않을 때만 로그인 창 열기
+      setShowLogin(true);
+    }
+  };
+
   return (
     <Sidebar>
       <Menu>
-        {isAuthenticated ? (
-          <Title>Welcome, {currentUser?.id}</Title>
-        ) : (
-          <>
-            <AuthButton onClick={() => setShowSignUp(true)}>
-              <TextWrapper>회원가입하기</TextWrapper>
-            </AuthButton>
-            <AuthButton onClick={() => setShowLogin(true)}>
-              <TextWrapper>로그인하기</TextWrapper>
-            </AuthButton>
-          </>
-        )}
+        {isAuthenticated && <Title>Welcome, {currentUser?.id}</Title>}
         <ContentsBox
           to="/mainpage"
           isActive={currentPath === "/mainpage"}
@@ -263,8 +271,17 @@ const SideBar = ({
           </IconBox>
           <TextWrapper>고객지원</TextWrapper>
         </ContentsBox>
-        {isAuthenticated && (
-          <AuthButton onClick={handleLogout}>
+        {!isAuthenticated ? (
+          <>
+            <AuthButton $isFirstAuth={true} onClick={handleSignUpClick}>
+              <TextWrapper>회원가입하기</TextWrapper>
+            </AuthButton>
+            <AuthButton onClick={handleLoginClick}>
+              <TextWrapper>로그인하기</TextWrapper>
+            </AuthButton>
+          </>
+        ) : (
+          <AuthButton $isFirstAuth={true} onClick={handleLogout}>
             <TextWrapper>로그아웃</TextWrapper>
           </AuthButton>
         )}
