@@ -155,7 +155,7 @@ export const MessageSend = styled.textarea`
   width: 95%;
   height: 44px;
   max-height: 20vh;
-  border: none; 
+  border: none;
   border-radius: 20px;
   padding: 0 15px;
   outline: none;
@@ -208,7 +208,7 @@ export const LoadingIndicator = styled.div`
   text-align: center;
   padding: 10px;
   font-style: italic;
- color: ${({ theme }) => theme.color};
+  color: ${({ theme }) => theme.color};
   &:after {
     content: "...";
     animation: ${dots} 1.5s steps(5, end) infinite;

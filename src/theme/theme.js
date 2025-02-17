@@ -1,5 +1,5 @@
 export const lightTheme = {
-  background: "#ffffff",
+  background: "#e8f5e9",/*배경 연한 초록색*/
   color: "#000000",
   commponent: "#f9f9fd",
   sideBar: "#f1f2f7",
@@ -17,7 +17,7 @@ export const lightTheme = {
 };
 
 export const darkTheme = {
-  background: "#242424",
+  background: "#243119",/*배경 진한 초록색*/
   color: "#fff",
   commponent: "#1D1D1D",
   overlay: "rgba(0, 0, 0, 0.5)",

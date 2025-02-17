@@ -113,11 +113,14 @@ const TextWrapper = styled.div`
 `;
 
 const AuthButton = styled(ContentsBox)`
-  background-color: ${({ theme }) => theme.background};
-  margin-top: ${(props) => (props.$isFirstAuth ? "300px" : "10px")};
+  background-color: ${(props) =>
+    props.$isSignUp ? "#FFE082" : props.theme.sideBar};
+  margin-top: ${(props) => (props.$isFirstAuth ? "270px" : "10px")};
   margin-bottom: 10px;
   border-radius: 50px;
-  height: 30px;
+  height: 50px;
+  justify-content: center;
+  border: ${(props) => (!props.$isSignUp ? "2px solid #8290ee" : "none")};
 `;
 
 const SideBar = ({
@@ -273,7 +276,11 @@ const SideBar = ({
         </ContentsBox>
         {!isAuthenticated ? (
           <>
-            <AuthButton $isFirstAuth={true} onClick={handleSignUpClick}>
+            <AuthButton
+              $isFirstAuth={true}
+              $isSignUp={true}
+              onClick={handleSignUpClick}
+            >
               <TextWrapper>회원가입하기</TextWrapper>
             </AuthButton>
             <AuthButton onClick={handleLoginClick}>

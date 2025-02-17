@@ -6,10 +6,10 @@ const LoginContainer = styled.div`
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background-color: ${({ theme }) => theme.background};
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  width: 400px;
+  padding: 40px;
+  background-color: ${({ theme }) => theme.sideBar};
+  border-radius: 10px;
   z-index: 1000;
 `;
 
