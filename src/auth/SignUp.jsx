@@ -71,7 +71,6 @@ const SignUp = ({ onClose }) => {
     e.preventDefault();
     setError("");
 
-    // 비밀번호 확인
     if (formData.password !== formData.password2) {
       setError("비밀번호가 일치하지 않습니다.");
       return;
@@ -79,29 +78,51 @@ const SignUp = ({ onClose }) => {
 
     try {
       const response = await fetch(
-        "http://54.180.252.205:8009/api/account/register/",
+        "http://54.180.252.205:8001/account/register/",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            "Accept": "application/json"
           },
-          body: JSON.stringify(formData),
+          body: JSON.stringify({
+            username: formData.username,
+            email: formData.email,
+            password: formData.password,
+            password2: formData.password2
+          }),
         }
       );
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(Object.values(data).flat().join(" "));
+      let data;
+      try {
+        data = await response.json();
+        console.log("Server Response:", data);
+      } catch (jsonError) {
+        console.error("JSON 파싱 에러:", jsonError);
+        throw new Error("서버 응답을 처리할 수 없습니다.");
       }
 
-      // 회원가입 성공
+      if (!response.ok) {
+        const errorMessage = data.detail || 
+                           data.message || 
+                           (typeof data === 'object' ? Object.values(data).flat().join(", ") : data) ||
+                           "알 수 없는 오류가 발생했습니다.";
+        throw new Error(errorMessage);
+      }
+
       alert("회원가입이 완료되었습니다. 로그인해주세요.");
-      onClose(); // 모달 닫기
-      navigate("/login"); // 로그인 페이지로 이동
+      onClose();
+      navigate("/login");
     } catch (err) {
-      setError(err.message);
+      console.error("Error:", err);
+      setError(err.message || "서버와의 통신 중 오류가 발생했습니다.");
     }
+  };
+
+  const handleCancel = () => {
+    onClose();
+    navigate("/login");
   };
 
   return (
@@ -141,7 +162,7 @@ const SignUp = ({ onClose }) => {
         />
         {error && <ErrorMessage>{error}</ErrorMessage>}
         <Button type="submit">회원가입</Button>
-        <Button type="button" onClick={onClose}>
+        <Button type="button" onClick={handleCancel}>
           취소
         </Button>
       </Form>

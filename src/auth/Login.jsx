@@ -47,6 +47,22 @@ const ErrorMessage = styled.p`
   margin: 5px 0;
 `;
 
+const SignUpLink = styled.p`
+  color: ${({ theme }) => theme.color};
+  text-align: center;
+  margin-top: 10px;
+
+  a {
+    color: #5a6acf;
+    text-decoration: none;
+    font-weight: bold;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+`;
+
 const Login = ({ onClose }) => {
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -103,9 +119,10 @@ const Login = ({ onClose }) => {
         />
         {error && <ErrorMessage>{error}</ErrorMessage>}
         <Button type="submit">로그인</Button>
-        <Button type="button" onClick={onClose}>
-          취소
-        </Button>
+        
+        <SignUpLink>
+          계정이 없으신가요? <a href="/signup">회원가입</a>
+        </SignUpLink>
       </Form>
     </LoginContainer>
   );
