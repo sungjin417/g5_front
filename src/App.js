@@ -1,6 +1,8 @@
 import { Route, Routes, BrowserRouter, Navigate } from "react-router-dom";
 import ChatBot from "./chat/ChatBot";
 import MainForm from "./common/commonForm/mainform";
+import Login from "./auth/Login";
+import SignUp from "./auth/SignUp";
 import { ThemeProvider } from "styled-components";
 import { lightTheme, darkTheme } from "./theme/theme";
 import { useState, useEffect } from "react";
@@ -38,7 +40,7 @@ function App() {
   // 보호된 라우트 컴포넌트
   const ProtectedRoute = ({ children }) => {
     if (!isAuthenticated) {
-      return <Navigate to="/" />;
+      return <Navigate to="/login" />;
     }
     return children;
   };
@@ -57,6 +59,22 @@ function App() {
               />
             }
           >
+            {/* 인증되지 않은 사용자를 위한 라우트 */}
+            <Route
+              path="/login"
+              element={
+                isAuthenticated ? (
+                  <Navigate to="/" />
+                ) : (
+                  <Login onLogin={() => setIsAuthenticated(true)} />
+                )
+              }
+            />
+            <Route
+              path="/signup"
+              element={isAuthenticated ? <Navigate to="/" /> : <SignUp />}
+            />
+
             {/* 보호된 라우트들 */}
             <Route
               path="/"
@@ -115,6 +133,9 @@ function App() {
               }
             />
           </Route>
+
+          {/* 기본 리다이렉트 */}
+          <Route path="*" element={<Navigate to="/login" />} />
         </Routes>
       </BrowserRouter>
     </ThemeProvider>
