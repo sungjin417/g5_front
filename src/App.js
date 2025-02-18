@@ -7,6 +7,8 @@ import { ThemeProvider } from "styled-components";
 import { lightTheme, darkTheme } from "./theme/theme";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
+import AuthLayout from "./auth/AuthLayout";
 
 function App() {
   const [isDarkMode, setIsDarkMode] = useState(
@@ -49,110 +51,109 @@ function App() {
   };
 
   return (
-    <ThemeProvider theme={isDarkMode ? darkTheme : lightTheme}>
-      <BrowserRouter>
-        <Routes>
-          <Route
-            element={
-              <MainForm
-                isDarkMode={isDarkMode}
-                toggleDarkMode={toggleDarkMode}
-                isAuthenticated={isAuthenticated}
-                setIsAuthenticated={setIsAuthenticated}
+    <AuthProvider>
+      <ThemeProvider theme={isDarkMode ? darkTheme : lightTheme}>
+        <BrowserRouter>
+          <Routes>
+            {/* Auth routes */}
+            <Route element={<AuthLayout />}>
+              <Route
+                path="/login"
+                element={
+                  isAuthenticated ? (
+                    <Navigate to="/" />
+                  ) : (
+                    <Login onClose={() => {}} />
+                  )
+                }
               />
-            }
-          >
-            {/* 로그인/회원가입 라우트 수정 */}
-            <Route
-              path="/login"
-              element={
-                isAuthenticated ? (
-                  <Navigate to="/" />
-                ) : (
-                  <Login
-                    onClose={() => {}}
-                    onLogin={(user) => {
-                      setIsAuthenticated(true);
-                    }}
-                  />
-                )
-              }
-            />
-            <Route
-              path="/signup"
-              element={
-                isAuthenticated ? (
-                  <Navigate to="/" />
-                ) : (
-                  <SignUp onClose={() => {}} />
-                )
-              }
-            />
+              <Route
+                path="/signup"
+                element={
+                  isAuthenticated ? (
+                    <Navigate to="/" />
+                  ) : (
+                    <SignUp onClose={() => {}} />
+                  )
+                }
+              />
+            </Route>
 
-            {/* 보호된 라우트들 */}
+            {/* Protected routes */}
             <Route
-              path="/"
               element={
-                <ProtectedRoute>
-                  <ChatBot isDarkMode={isDarkMode} />
-                </ProtectedRoute>
+                <MainForm
+                  isDarkMode={isDarkMode}
+                  toggleDarkMode={toggleDarkMode}
+                  isAuthenticated={isAuthenticated}
+                  setIsAuthenticated={setIsAuthenticated}
+                />
               }
-            />
-            <Route
-              path="/mainpage"
-              element={
-                <ProtectedRoute>
-                  <div>Dashboard Page</div>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/announcement"
-              element={
-                <ProtectedRoute>
-                  <div>Announcement Page</div>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/information"
-              element={
-                <ProtectedRoute>
-                  <div>Information Page</div>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/evaluation"
-              element={
-                <ProtectedRoute>
-                  <div>Evaluation Page</div>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/setting"
-              element={
-                <ProtectedRoute>
-                  <div>Settings Page</div>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/help"
-              element={
-                <ProtectedRoute>
-                  <div>Help Page</div>
-                </ProtectedRoute>
-              }
-            />
-          </Route>
+            >
+              <Route
+                path="/"
+                element={
+                  <ProtectedRoute>
+                    <ChatBot isDarkMode={isDarkMode} />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/mainpage"
+                element={
+                  <ProtectedRoute>
+                    <div>Dashboard Page</div>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/announcement"
+                element={
+                  <ProtectedRoute>
+                    <div>Announcement Page</div>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/information"
+                element={
+                  <ProtectedRoute>
+                    <div>Information Page</div>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/evaluation"
+                element={
+                  <ProtectedRoute>
+                    <div>Evaluation Page</div>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/setting"
+                element={
+                  <ProtectedRoute>
+                    <div>Settings Page</div>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/help"
+                element={
+                  <ProtectedRoute>
+                    <div>Help Page</div>
+                  </ProtectedRoute>
+                }
+              />
+            </Route>
 
-          {/* 기본 리다이렉트 */}
-          <Route path="*" element={<Navigate to="/login" />} />
-        </Routes>
-      </BrowserRouter>
-    </ThemeProvider>
+            {/* Default redirect */}
+            <Route path="*" element={<Navigate to="/login" />} />
+          </Routes>
+        </BrowserRouter>
+      </ThemeProvider>
+    </AuthProvider>
   );
 }
 

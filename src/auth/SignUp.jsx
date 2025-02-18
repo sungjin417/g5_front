@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
+import styled from "styled-components";
 
 const SignUpContainer = styled.div`
   position: fixed;
@@ -24,87 +24,102 @@ const Form = styled.form`
 const Input = styled.input`
   padding: 8px;
   border: 1px solid #ddd;
-  border-radius: 4px;
+  border-radius: 5px;
+  font-size: 14px;
+  width: 100%;
 `;
 
 const Button = styled.button`
-  padding: 10px;
-  background-color: #5a6acf;
+  padding: 10px 20px;
+  background-color: #5a67ba;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 5px;
   cursor: pointer;
+  font-size: 14px;
 
   &:hover {
-    background-color: #4a59b0;
+    background-color: #4a55a2;
   }
 `;
 
-const ErrorMessage = styled.p`
-  color: red;
+const ErrorMessage = styled.div`
+  color: #ff6b6b;
   font-size: 14px;
-  margin: 5px 0;
+  text-align: center;
 `;
 
 const SignUp = ({ onClose }) => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    id: "",
+    username: "",
+    email: "",
     password: "",
-    confirmPassword: "",
+    password2: "",
   });
   const [error, setError] = useState("");
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
 
     // 비밀번호 확인
-    if (formData.password !== formData.confirmPassword) {
+    if (formData.password !== formData.password2) {
       setError("비밀번호가 일치하지 않습니다.");
       return;
     }
 
-    // 기존 사용자 데이터 확인
-    const existingUsers = JSON.parse(localStorage.getItem("users") || "[]");
+    try {
+      const response = await fetch(
+        "http://54.180.252.205:8009/api/account/register/",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formData),
+        }
+      );
 
-    // ID 중복 체크
-    if (existingUsers.some((user) => user.id === formData.id)) {
-      setError("중복 ID입니다. ID를 다시 입력해주세요.");
-      return;
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(Object.values(data).flat().join(" "));
+      }
+
+      // 회원가입 성공
+      alert("회원가입이 완료되었습니다. 로그인해주세요.");
+      onClose(); // 모달 닫기
+      navigate("/login"); // 로그인 페이지로 이동
+    } catch (err) {
+      setError(err.message);
     }
-
-    // 새 사용자 추가
-    const newUser = {
-      id: formData.id,
-      password: formData.password,
-    };
-
-    existingUsers.push(newUser);
-    localStorage.setItem("users", JSON.stringify(existingUsers));
-
-    // 자동 로그인 처리
-    localStorage.setItem("currentUser", JSON.stringify(newUser));
-
-    alert("회원가입이 완료되었습니다.");
-    navigate("/");
   };
 
   return (
     <SignUpContainer>
       <Form onSubmit={handleSubmit}>
-        <h2>회원가입</h2>
         <Input
           type="text"
-          name="id"
-          placeholder="아이디"
-          value={formData.id}
+          name="username"
+          placeholder="사용자 이름"
+          value={formData.username}
+          onChange={handleChange}
+          required
+        />
+        <Input
+          type="email"
+          name="email"
+          placeholder="이메일"
+          value={formData.email}
           onChange={handleChange}
           required
         />
@@ -118,9 +133,9 @@ const SignUp = ({ onClose }) => {
         />
         <Input
           type="password"
-          name="confirmPassword"
+          name="password2"
           placeholder="비밀번호 확인"
-          value={formData.confirmPassword}
+          value={formData.password2}
           onChange={handleChange}
           required
         />

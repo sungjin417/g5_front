@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import styled from "styled-components";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 const LoginContainer = styled.div`
   position: fixed;
@@ -45,52 +47,37 @@ const ErrorMessage = styled.p`
   margin: 5px 0;
 `;
 
-const SignUpLink = styled.p`
-  color: ${({ theme }) => theme.color};
-  text-align: center;
-  margin-top: 10px;
-
-  a {
-    color: #5a6acf;
-    text-decoration: none;
-    font-weight: bold;
-
-    &:hover {
-      text-decoration: underline;
-    }
-  }
-`;
-
-const Login = ({ onClose, onLogin }) => {
+const Login = ({ onClose }) => {
+  const navigate = useNavigate();
+  const { login } = useAuth();
   const [formData, setFormData] = useState({
-    id: "",
+    username: "",
     password: "",
   });
   const [error, setError] = useState("");
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
 
-    // 저장된 사용자 데이터 확인
-    const users = JSON.parse(localStorage.getItem("users") || "[]");
-    const user = users.find(
-      (u) => u.id === formData.id && u.password === formData.password
-    );
-
-    if (user) {
-      // 로그인 성공
-      localStorage.setItem("currentUser", JSON.stringify(user));
-      onLogin(user);
-      onClose();
-    } else {
-      setError("ID 또는 비밀번호가 일치하지 않습니다.");
+    try {
+      const success = await login(formData.username, formData.password);
+      
+      if (success) {
+        navigate("/");
+      } else {
+        setError("아이디 또는 비밀번호가 올바르지 않습니다.");
+      }
+    } catch (err) {
+      setError(err.message || "로그인에 실패했습니다.");
     }
   };
 
@@ -100,9 +87,9 @@ const Login = ({ onClose, onLogin }) => {
         <h2>로그인</h2>
         <Input
           type="text"
-          name="id"
+          name="username"
           placeholder="아이디"
-          value={formData.id}
+          value={formData.username}
           onChange={handleChange}
           required
         />
@@ -119,9 +106,6 @@ const Login = ({ onClose, onLogin }) => {
         <Button type="button" onClick={onClose}>
           취소
         </Button>
-        <SignUpLink>
-          계정이 없으신가요? <a href="/signup">회원가입</a>
-        </SignUpLink>
       </Form>
     </LoginContainer>
   );

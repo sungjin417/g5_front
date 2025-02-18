@@ -263,11 +263,12 @@ const ChatBot = () => {
    * - 이벤트 핸들러 등록
    * - 에러 처리
    */
+  
   const connectWebSocket = () => {
     try {
       console.log("Attempting to connect to WebSocket...");
       // const wsUrl = process.env.REACT_APP_WEBSOCKET_URL;
-      const wsUrl = "ws://54.180.252.205:8009/ws/chat";
+      const wsUrl = "ws://54.180.252.205:8001/ws/chat";
       // const wsUrl = "ws://0.0.0.0:8009/ws/chat";
       // const wsUrl = "ws://127.0.0.1:8009/ws/chat";
       if (!wsUrl) {
