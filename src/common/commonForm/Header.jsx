@@ -271,8 +271,6 @@ const TextWrapper = styled.span`
 `;
 
 const Header = ({
-  toggleSideBar,
-  isHeader,
   toggleDarkMode,
   isDarkMode,
   toggleUserToggle,
@@ -319,11 +317,8 @@ const Header = ({
 
   return (
     <HeaderContainer>
-      <LeftBox isHeader={isHeader}>
-        <SideBarToggle onClick={toggleSideBar}>
-          <IoMenuOutline size={30} color="#8290ee" />
-        </SideBarToggle>
-        <LogoBox to="/mainpage" isHeader={isHeader}>
+      <LeftBox>
+        <LogoBox to="/mainpage">
           <SymLogo />
         </LogoBox>
         <LogoTitle to="/mainpage">테스트입니다.</LogoTitle>

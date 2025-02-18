@@ -1,9 +1,8 @@
 import { Outlet, useLocation } from "react-router-dom";
-import styled, { css, ThemeProvider } from "styled-components";
-import SideBar from "./SideBar";
+import styled, { ThemeProvider } from "styled-components";
 import Header from "./Header";
-import { useEffect, useState } from "react";
 import { lightTheme, darkTheme } from "../../theme/theme";
+import { useState } from "react";
 
 const Screen = styled.div`
   background-color: ${({ theme }) => theme.background};
@@ -14,15 +13,6 @@ const Screen = styled.div`
   width: 100%;
   height: 91.9vh;
   transition: background-color 0.5s ease, color 0.5s ease;
-  @media screen and (max-width: 768px) {
-  }
-  ${({ isAnnouncement }) =>
-    isAnnouncement &&
-    css`
-      @media screen and (max-width: 1200px) {
-        height: 100%;
-      }
-    `}
 `;
 
 const Contents = styled.div`
@@ -43,40 +33,7 @@ const MainForm = ({
   isAuthenticated,
   setIsAuthenticated,
 }) => {
-  const [isSideBarVisible, setIsSideBarVisible] = useState(true);
-  const [isHeader, setIsHeader] = useState(false);
-  const location = useLocation();
-  const isAnnouncement = location.pathname === "/announcement";
   const [isUserToggleVisible, setIsUserToggleVisible] = useState(false);
-
-  // 사이드바의 가시성을 토글하는 함수
-  const toggleSideBar = () => {
-    setIsSideBarVisible(!isSideBarVisible);
-    setIsHeader(!isHeader);
-  };
-
-  // 화면 크기 변화에 따라 사이드바를 숨기거나 보이게 설정하는 함수
-  const handleResize = () => {
-    if (window.innerWidth < 1201) {
-      setIsSideBarVisible(false);
-      setIsHeader(false);
-    } else {
-      setIsSideBarVisible(true);
-    }
-  };
-
-  useEffect(() => {
-    // 컴포넌트가 마운트될 때 리사이즈 이벤트 리스너 추가
-    window.addEventListener("resize", handleResize);
-
-    // 컴포넌트가 마운트될 때 한 번 체크
-    handleResize();
-
-    // 컴포넌트가 언마운트될 때 리사이즈 이벤트 리스너 제거
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
 
   const toggleUserToggle = () => {
     setIsUserToggleVisible(!isUserToggleVisible);
@@ -85,8 +42,6 @@ const MainForm = ({
   return (
     <ThemeProvider theme={isDarkMode ? darkTheme : lightTheme}>
       <Header
-        toggleSideBar={toggleSideBar}
-        isHeader={isHeader}
         toggleDarkMode={toggleDarkMode}
         isDarkMode={isDarkMode}
         toggleUserToggle={toggleUserToggle}
@@ -94,15 +49,7 @@ const MainForm = ({
         isAuthenticated={isAuthenticated}
         setIsAuthenticated={setIsAuthenticated}
       />
-      <Screen isAnnouncement={isAnnouncement}>
-        {isSideBarVisible && (
-          <SideBar
-            toggleSideBar={toggleSideBar}
-            isDarkMode={isDarkMode}
-            isAuthenticated={isAuthenticated}
-            setIsAuthenticated={setIsAuthenticated}
-          />
-        )}
+      <Screen>
         <Contents>
           <Outlet
             context={{

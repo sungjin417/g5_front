@@ -77,7 +77,7 @@ export const MessageBox = styled.div`
   flex-direction: column;
   justify-content: ${(props) =>
     props.hasMessages ? "space-between" : "center"};
-  align-items: ${(props) => (props.hasMessages ? "" : "center")};
+  align-items: ${(props) => (props.hasMessages ? "center" : "center")};
   padding: 20px;
   height: 100%;
   background-color: ${({ theme, isDarkMode }) =>

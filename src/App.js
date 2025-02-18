@@ -57,15 +57,9 @@ function App() {
               />
             }
           >
-            {/* 공개 라우트 */}
-            <Route
-              path="/"
-              element={<div>Welcome! Please login or sign up.</div>}
-            />
-
             {/* 보호된 라우트들 */}
             <Route
-              path="/chat"
+              path="/"
               element={
                 <ProtectedRoute>
                   <ChatBot isDarkMode={isDarkMode} />

@@ -19,6 +19,9 @@ import { FaArrowLeft } from "react-icons/fa";
 import UserInfoForm from "./UserInfoForm";
 import styled from "styled-components";
 
+const TitleText = styled.h1`
+  display: ${(props) => (props.hasMessages ? "none" : "block")};
+`;
 /**
  * 설정 아이콘 스타일 컴포넌트
  * - 우측 상단에 위치
@@ -59,8 +62,10 @@ const ContentWrapper = styled.div`
 
 const PlusBtn = styled.div`
   display: flex;
+  flex-direction: column;
   justify-content: center;
-  width: 50%;
+  align-items: center;
+  width: 70%;
   padding: 10px;
   position: ${(props) => (props.hasMessages ? "relative" : "absolute")};
   @media screen and (max-width: 768px) {
@@ -69,7 +74,7 @@ const PlusBtn = styled.div`
 `;
 const CardSection = styled.div`
   display: ${(props) => (props.show ? "block" : "none")};
-  width: 16vw;
+  width: 14vw;
   bottom: 56px;
   position: absolute;
   z-index: 99;
@@ -621,13 +626,13 @@ const ChatBot = () => {
             )}
           </ContentWrapper>
           <PlusBtn hasMessages={hasMessages}>
+            <TitleText hasMessages={hasMessages}>
+              무엇을 도와드릴까요?
+            </TitleText>
             <MessageSendBox>
               <CardBox>
                 <CardSection show={showCards}>
                   <CardWrapper>
-                    <CardContainer onClick={() => setShowUserInfoModal(true)}>
-                      <CardText>사용자 정보 입력</CardText>
-                    </CardContainer>
                     <CardContainer onClick={() => setShowFileUploadModal(true)}>
                       <CardText>
                         혈액 검사 파일
