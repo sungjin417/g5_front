@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import styled from "styled-components";
+import { useNavigate } from "react-router-dom";
 
 const SignUpContainer = styled.div`
   position: fixed;
@@ -46,6 +47,7 @@ const ErrorMessage = styled.p`
 `;
 
 const SignUp = ({ onClose }) => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     id: "",
     password: "",
@@ -87,8 +89,11 @@ const SignUp = ({ onClose }) => {
     existingUsers.push(newUser);
     localStorage.setItem("users", JSON.stringify(existingUsers));
 
+    // 자동 로그인 처리
+    localStorage.setItem("currentUser", JSON.stringify(newUser));
+
     alert("회원가입이 완료되었습니다.");
-    onClose();
+    navigate("/");
   };
 
   return (

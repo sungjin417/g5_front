@@ -6,6 +6,7 @@ import SignUp from "./auth/SignUp";
 import { ThemeProvider } from "styled-components";
 import { lightTheme, darkTheme } from "./theme/theme";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 function App() {
   const [isDarkMode, setIsDarkMode] = useState(
@@ -39,6 +40,8 @@ function App() {
 
   // 보호된 라우트 컴포넌트
   const ProtectedRoute = ({ children }) => {
+    const navigate = useNavigate();
+
     if (!isAuthenticated) {
       return <Navigate to="/login" />;
     }
@@ -59,20 +62,31 @@ function App() {
               />
             }
           >
-            {/* 인증되지 않은 사용자를 위한 라우트 */}
+            {/* 로그인/회원가입 라우트 수정 */}
             <Route
               path="/login"
               element={
                 isAuthenticated ? (
                   <Navigate to="/" />
                 ) : (
-                  <Login onLogin={() => setIsAuthenticated(true)} />
+                  <Login
+                    onClose={() => {}}
+                    onLogin={(user) => {
+                      setIsAuthenticated(true);
+                    }}
+                  />
                 )
               }
             />
             <Route
               path="/signup"
-              element={isAuthenticated ? <Navigate to="/" /> : <SignUp />}
+              element={
+                isAuthenticated ? (
+                  <Navigate to="/" />
+                ) : (
+                  <SignUp onClose={() => {}} />
+                )
+              }
             />
 
             {/* 보호된 라우트들 */}

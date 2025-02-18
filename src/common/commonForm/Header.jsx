@@ -6,8 +6,6 @@ import { IoMenuOutline } from "react-icons/io5";
 import UserToggle from "./UserToggle";
 import { useState } from "react";
 import defaultProfile from "../../img/mainImg/pro.png";
-import SignUp from "../../auth/SignUp";
-import Login from "../../auth/Login";
 import { VscMenu, VscColorMode } from "react-icons/vsc";
 import { IoChevronDown } from "react-icons/io5";
 
@@ -278,40 +276,16 @@ const Header = ({
   isAuthenticated,
   setIsAuthenticated,
 }) => {
-  const [showLogin, setShowLogin] = useState(false);
-  const [showSignUp, setShowSignUp] = useState(false);
   const [currentUser, setCurrentUser] = useState(() => {
     const user = localStorage.getItem("currentUser");
     return user ? JSON.parse(user) : null;
   });
-
-  const handleLogin = (userData) => {
-    const user = {
-      id: userData.id,
-      username: userData.id, // id를 username으로 사용
-    };
-    localStorage.setItem("currentUser", JSON.stringify(user));
-    setCurrentUser(user);
-    setIsAuthenticated(true);
-  };
 
   const handleLogout = () => {
     localStorage.removeItem("currentUser");
     setCurrentUser(null);
     if (setIsAuthenticated) {
       setIsAuthenticated(false);
-    }
-  };
-
-  const handleSignUpClick = () => {
-    if (!showLogin) {
-      setShowSignUp(true);
-    }
-  };
-
-  const handleLoginClick = () => {
-    if (!showSignUp) {
-      setShowLogin(true);
     }
   };
 
@@ -337,16 +311,7 @@ const Header = ({
           </Toggle>
         </ToggleBox>
         <UserBox>
-          {!isAuthenticated ? (
-            <>
-              <AuthButton $isFirstAuth={true} onClick={handleSignUpClick}>
-                <TextWrapper>회원가입하기</TextWrapper>
-              </AuthButton>
-              <AuthButton onClick={handleLoginClick}>
-                <TextWrapper>로그인하기</TextWrapper>
-              </AuthButton>
-            </>
-          ) : (
+          {isAuthenticated && (
             <>
               <UserDiv>
                 <UserProfile>
@@ -370,11 +335,6 @@ const Header = ({
           <Dont />
         </UserBox>
       </RightBox>
-
-      {showSignUp && <SignUp onClose={() => setShowSignUp(false)} />}
-      {showLogin && (
-        <Login onClose={() => setShowLogin(false)} onLogin={handleLogin} />
-      )}
     </HeaderContainer>
   );
 };
