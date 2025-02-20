@@ -1,13 +1,15 @@
 import styled from "styled-components";
 import Logo from "../../img/logo/logo.png";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { BsMoonStars, BsSunFill } from "react-icons/bs";
 import { IoMenuOutline } from "react-icons/io5";
 import UserToggle from "./UserToggle";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import defaultProfile from "../../img/mainImg/pro.png";
 import { VscMenu, VscColorMode } from "react-icons/vsc";
 import { IoChevronDown } from "react-icons/io5";
+import { useAuth } from "../../context/AuthContext";
+import { IoLogOutOutline } from "react-icons/io5";
 
 const HeaderContainer = styled.div`
   width: 100%;
@@ -63,6 +65,9 @@ const RightBox = styled.div`
   flex-direction: row;
   justify-content: space-around;
   align-items: center;
+  background-color: ${({ theme }) => theme.sideBar};
+  color: ${({ theme }) => theme.color};
+  transition: background-color 0.5s ease, color 0.5s ease;
 `;
 
 const LogoBox = styled(Link)`
@@ -71,12 +76,8 @@ const LogoBox = styled(Link)`
   display: flex;
   justify-content: end;
   align-items: center;
-  &:hover {
-    transform: scale(1.04);
-  }
-  @media screen and (max-width: 1200px) {
-    display: ${({ isHeader }) => (isHeader ? "flex" : "none")};
-  }
+ 
+ 
 `;
 
 const SymLogo = styled.div`
@@ -97,12 +98,22 @@ const LogoTitle = styled(Link)`
   align-items: center;
   color: #5a67ba;
   font-family: "Poppins-Bold", Helvetica;
-  font-size: 15px;
+  font-size: 18px;
   font-weight: 600;
   white-space: nowrap;
   text-decoration: none;
+ 
+`;
+
+const LinkBox = styled(Link)`
+  width: 60%;
+  text-decoration: none;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
   &:hover {
-    font-size: 16px;
+    transform: scale(1.04);
   }
 `;
 
@@ -268,34 +279,69 @@ const TextWrapper = styled.span`
   margin-left: 10px;
 `;
 
+const LogoutIcon = styled.div`
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 50%;
+  transition: background-color 0.3s ease;
+  
+  &:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 12px ${({ theme }) => theme.shadow};
+    background-color: ${({ theme }) => theme.sideCheck};
+  }
+`;
+
+
+
 const Header = ({
   toggleDarkMode,
   isDarkMode,
   toggleUserToggle,
-  isUserToggleVisible,
-  isAuthenticated,
-  setIsAuthenticated,
+  isUserToggleVisible
 }) => {
-  const [currentUser, setCurrentUser] = useState(() => {
-    const user = localStorage.getItem("currentUser");
-    return user ? JSON.parse(user) : null;
-  });
+  const { logout, isAuthenticated, getUserInfo } = useAuth();
+  const navigate = useNavigate();
+  const [currentUser, setCurrentUser] = useState(null);
 
-  const handleLogout = () => {
-    localStorage.removeItem("currentUser");
-    setCurrentUser(null);
-    if (setIsAuthenticated) {
-      setIsAuthenticated(false);
+  // useCallback으로 함수 메모이제이션
+  const fetchUserInfo = useCallback(async () => {
+    if (isAuthenticated && !currentUser) {  // currentUser가 없을 때만 실행
+      const userInfo = await getUserInfo();
+      if (userInfo) {
+        setCurrentUser(userInfo);
+      }
+    }
+  }, [isAuthenticated, getUserInfo, currentUser]);
+
+  // 컴포넌트 마운트 시에만 실행
+  useEffect(() => {
+    fetchUserInfo();
+  }, [fetchUserInfo]);
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      setCurrentUser(null);
+      navigate('/login');
+    } catch (error) {
+      console.error('로그아웃 중 오류 발생:', error);
+      alert('로그아웃 중 오류가 발생했습니다. 다시 시도해주세요.');
     }
   };
 
   return (
     <HeaderContainer>
       <LeftBox>
-        <LogoBox to="/mainpage">
+        <LinkBox to="/">
+        <LogoBox>
           <SymLogo />
         </LogoBox>
-        <LogoTitle to="/mainpage">테스트입니다.</LogoTitle>
+        <LogoTitle>EvidenceChat</LogoTitle>
+        </LinkBox>
       </LeftBox>
       <RightBox>
         <ToggleBox>
@@ -321,15 +367,17 @@ const Header = ({
                   />
                 </UserProfile>
                 <UserName>{currentUser?.username || "사용자"}</UserName>
-                <UserToggle
-                  isOpen={isUserToggleVisible}
-                  setIsOpen={toggleUserToggle}
-                  email={currentUser?.username || "사용자"}
-                />
+                {isUserToggleVisible && (
+                  <UserToggle
+                    isOpen={isUserToggleVisible}
+                    setIsOpen={toggleUserToggle}
+                    email={currentUser?.email || ""}
+                  />
+                )}
               </UserDiv>
-              <AuthButton $isFirstAuth={true} onClick={handleLogout}>
-                <TextWrapper>로그아웃</TextWrapper>
-              </AuthButton>
+              <LogoutIcon onClick={handleLogout}>
+                <IoLogOutOutline size={24} />
+              </LogoutIcon>
             </>
           )}
           <Dont />

@@ -1,6 +1,12 @@
 import styled, { keyframes } from "styled-components";
 import { VscLoading } from "react-icons/vsc";
 
+// bounce 애니메이션 정의
+export const bounce = keyframes`
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+`;
+
 const fadeIn = keyframes`
   from {
     opacity: 0;
@@ -44,6 +50,24 @@ const spin = keyframes`
   to {
     transform: rotate(360deg);
   }
+`;
+
+// 새로운 애니메이션 정의
+export const float = keyframes`
+  0% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-20px) rotate(5deg); }
+  100% { transform: translateY(0px) rotate(0deg); }
+`;
+
+export const gradientBg = keyframes`
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+`;
+
+export const typing = keyframes`
+  from { width: 0 }
+  to { width: 100% }
 `;
 
 export const Contain = styled.div`
@@ -174,6 +198,9 @@ export const SendWrap = styled.div`
   padding: 0 15px;
   color: ${({ theme, isDarkMode }) =>
     isDarkMode ? theme.lightText : theme.darkText};
+  cursor: ${props => props.disabled ? 'not-allowed' : 'pointer'};
+  opacity: ${props => props.disabled ? 0.5 : 1};
+  pointer-events: ${props => props.disabled ? 'none' : 'auto'};
 
   @media screen and (max-width: 768px) {
     font-size: 18px;
@@ -198,6 +225,16 @@ export const MessageBubble = styled.div`
   white-space: pre-line;
   animation: ${fadeIn} 0.5s ease forwards;
   text-align: left;
+   a {
+    color: ${({ theme }) => theme.color};
+    text-decoration: underline;
+    cursor: pointer;
+    
+    &:hover {
+      color: #E4643D;
+    }
+  }
+
   @media screen and (max-width: 768px) {
     max-width: 85%;
     font-size: 14px;
@@ -219,9 +256,90 @@ export const LoadingIcon = styled(VscLoading)`
   font-size: 24px;
   animation: ${spin} 1s linear infinite;
 `;
+
 export const DisclaimerMessage = styled.p`
   font-size: 10px;
   text-align: center;
   color: #666;
   margin-bottom: 10px;
+`;
+
+export const LoadingModalOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(5px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+`;
+
+export const LoadingModalContent = styled.div`
+  background: linear-gradient(45deg, #f3f4f6, #ffffff);
+  background-size: 200% 200%;
+  animation: ${gradientBg} 5s ease infinite;
+  padding: 30px;
+  border-radius: 20px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+`;
+
+export const LoadingEmoji = styled.div`
+  font-size: 50px;
+  animation: ${float} 2s ease-in-out infinite;
+`;
+
+export const LoadingMessage = styled.div`
+  font-size: 16px;
+  color: #4a59b0;
+  text-align: center;
+  font-weight: 500;
+  overflow: hidden;
+  white-space: nowrap;
+  position: relative;
+  width: fit-content;
+
+`;
+
+// 로딩 바 애니메이션 추가
+const progressAnimation = keyframes`
+  0% {
+    left: -30%;
+  }
+  50% {
+    left: 100%;
+  }
+  100% {
+    left: -30%;
+  }
+`;
+
+export const LoadingProgress = styled.div`
+  width: 200px;
+  height: 6px;
+  background: #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -30%;
+    height: 100%;
+    width: 30%;
+    background: linear-gradient(90deg, #4a59b0, #6d7adb);
+    border-radius: 10px;
+    animation: ${progressAnimation} 2s ease-in-out infinite;
+    box-shadow: 0 0 10px rgba(74, 89, 176, 0.5);
+  }
 `;

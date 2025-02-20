@@ -11,6 +11,7 @@ const LoginContainer = styled.div`
   width: 400px;
   padding: 40px;
   background-color: ${({ theme }) => theme.sideBar};
+  color: ${({ theme }) => theme.color};
   border-radius: 10px;
   z-index: 1000;
 `;
@@ -63,7 +64,7 @@ const SignUpLink = styled.p`
   }
 `;
 
-const Login = ({ onClose }) => {
+const Login = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
   const [formData, setFormData] = useState({
@@ -86,8 +87,9 @@ const Login = ({ onClose }) => {
 
     try {
       const success = await login(formData.username, formData.password);
-      
+
       if (success) {
+        // 로그인 성공 시 메인 페이지로 이동
         navigate("/");
       } else {
         setError("아이디 또는 비밀번호가 올바르지 않습니다.");
@@ -119,7 +121,6 @@ const Login = ({ onClose }) => {
         />
         {error && <ErrorMessage>{error}</ErrorMessage>}
         <Button type="submit">로그인</Button>
-        
         <SignUpLink>
           계정이 없으신가요? <a href="/signup">회원가입</a>
         </SignUpLink>

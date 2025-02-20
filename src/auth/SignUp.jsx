@@ -2,6 +2,10 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 
+const Tilte = styled.h1`
+color: ${({ theme }) => theme.color};
+`
+
 const SignUpContainer = styled.div`
   position: fixed;
   top: 50%;
@@ -49,7 +53,7 @@ const ErrorMessage = styled.div`
   text-align: center;
 `;
 
-const SignUp = ({ onClose }) => {
+const SignUp = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     username: "",
@@ -78,7 +82,7 @@ const SignUp = ({ onClose }) => {
 
     try {
       const response = await fetch(
-        "http://54.180.252.205:8001/account/register/",
+        "http://13.125.202.34:8001/account/register/",
         {
           method: "POST",
           headers: {
@@ -112,7 +116,6 @@ const SignUp = ({ onClose }) => {
       }
 
       alert("회원가입이 완료되었습니다. 로그인해주세요.");
-      onClose();
       navigate("/login");
     } catch (err) {
       console.error("Error:", err);
@@ -121,13 +124,13 @@ const SignUp = ({ onClose }) => {
   };
 
   const handleCancel = () => {
-    onClose();
     navigate("/login");
   };
 
   return (
     <SignUpContainer>
       <Form onSubmit={handleSubmit}>
+        <Tilte>회원가입</Tilte>
         <Input
           type="text"
           name="username"

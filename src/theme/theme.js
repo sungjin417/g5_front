@@ -13,11 +13,11 @@ export const lightTheme = {
   drag: "#687bf7",
   shadow: "#90909040",
   chatHead: "#ffffff",
-  mb1: "#FEF9EC",
+  mb1: "#AFD4FD",
 };
 
 export const darkTheme = {
-  background: "#243119",/*배경 진한 초록색*/
+  background: "#5A67BA",
   color: "#fff",
   commponent: "#1D1D1D",
   overlay: "rgba(0, 0, 0, 0.5)",

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useAuth } from '../context/AuthContext'; // AuthContext import
 
 import {
   Contain,
@@ -8,16 +9,22 @@ import {
   MessageSendBox,
   MessageSendWrap,
   MessageSend,
-  SendWrap,
   MessageBubble,
   LoadingIcon,
   DisclaimerMessage,
+  bounce,
+  LoadingModalOverlay,
+  LoadingModalContent,
+  LoadingEmoji,
+  LoadingMessage,
+  LoadingProgress,
 } from "./ChatBotStyles";
 import { CardWrapper, CardContainer, CardText } from "./ChatCardStyles";
 import { VscSend, VscAdd } from "react-icons/vsc";
 import { FaArrowLeft } from "react-icons/fa";
 import UserInfoForm from "./UserInfoForm";
 import styled from "styled-components";
+import common from "../common/Common";
 
 const TitleText = styled.h1`
   display: ${(props) => (props.hasMessages ? "none" : "block")};
@@ -123,7 +130,7 @@ const Modal = styled.div`
 // 모달 내용 스타일 컴포넌트
 const ModalContent = styled.div`
   display: flex;
-  background: white;
+  background: ${({ theme }) => theme.commponent};
   padding: 20px;
   border-radius: 8px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
@@ -152,7 +159,7 @@ const UploadButton = styled.button`
   border-radius: 5px;
   border: none;
   background-color: #007bff;
-  color: white;
+  color: ${({ theme }) => theme.color};
   cursor: pointer;
   &:hover {
     background-color: #0056b3;
@@ -176,7 +183,7 @@ const BackButton = styled.button`
   display: flex;
   align-items: center;
   gap: 5px;
-  color: #007bff;
+  color: ${({ theme }) => theme.color};
 
   &:hover {
     color: #0056b3;
@@ -205,6 +212,88 @@ const RotatingIcon = styled(VscAdd)`
     rotated ? "rotate(45deg)" : "rotate(0deg)"}; // 회전 상태에 따라 변환
 `;
 
+// 성공 모달 스타일 추가
+const SuccessModal = styled.div`
+  background:  ${({ theme }) => theme.commponent};
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  max-width: 400px;
+  width: 90%;
+`;
+
+const SuccessButton = styled.button`
+  margin-top: 15px;
+  padding: 8px 16px;
+  background-color: #4a59b0;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  &:hover {
+    background-color: #3a4890;
+  }
+`;
+
+// 로딩 모달 스타일 추가
+const LoadingModal = styled(Modal)`
+  background:  ${({ theme }) => theme.commponent};
+ 
+`;
+
+const LoadingContent = styled(SuccessModal)`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 3px solid ${({ theme }) => theme.border};
+  gap: 15px;
+`;
+
+// SendWrap 스타일 컴포넌트 수정
+const SendWrap = styled.div`
+  cursor: ${props => props.disabled ? 'not-allowed' : 'pointer'};
+  opacity: ${props => props.disabled ? 0.5 : 1};
+  pointer-events: ${props => props.disabled ? 'none' : 'auto'};
+    cursor: pointer;
+  font-size: 20px;
+  padding: 0 15px;
+  color: ${({ theme, isDarkMode }) =>
+    isDarkMode ? theme.lightText : theme.darkText};
+  cursor: ${props => props.disabled ? 'not-allowed' : 'pointer'};
+  opacity: ${props => props.disabled ? 0.5 : 1};
+  pointer-events: ${props => props.disabled ? 'none' : 'auto'};
+
+  @media screen and (max-width: 768px) {
+    font-size: 18px;
+  }
+`;
+
+const InputLoadingIndicator = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 15px;
+  color: #4a59b0;
+
+  span {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background-color: #4a59b0;
+    border-radius: 50%;
+    animation: ${bounce} 0.6s infinite;
+
+    &:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    &:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+  }
+`;
+
 /**
  * 채팅 봇 메인 컴포넌트
  * WebSocket을 통한 실시간 채팅 기능 구현
@@ -216,6 +305,8 @@ const ChatBot = () => {
   const [showFileUploadModal, setShowFileUploadModal] = useState(false);
   const [showCards, setShowCards] = useState(false);
   const [isRotated, setIsRotated] = useState(false); // 회전 상태 추가
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   // 채팅 관련 상태 관리
   const [inputMessage, setInputMessage] = useState("");
@@ -240,9 +331,35 @@ const ChatBot = () => {
   // === Refs ===
   const messageEndRef = useRef(null); // 스크롤 위치 관리용
   const ws = useRef(null); // WebSocket 인스턴스 관리
-  const userId = "test_user"; // 임시 사용자 ID (실제 구현 시 인증 시스템과 연동 필요)
+  
 
   const textarea = useRef();
+
+  // 로딩 메시지 배열
+  const loadingMessages = [
+    "AI가 열심히 생각하고 있어요",
+    "최선의 답변을 준비 중이에요",
+    "잠시만 기다려주세요",
+    "거의 다 왔어요",
+    "답변을 정리하고 있어요"
+  ];
+
+  // 로딩 이모지 배열
+  const loadingEmojis = ["🤔", "🧐", "💭", "✨", "🔍"];
+
+  // 현재 메시지와 이모지 인덱스 상태
+  const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
+  const [currentEmojiIndex, setCurrentEmojiIndex] = useState(0);
+
+  // AuthContext에서 사용자 정보와 인증 상태 가져오기
+  const { user, isAuthenticated, getUserInfo } = useAuth();
+  
+  // 컴포넌트 마운트 시 사용자 정보 가져오기
+  useEffect(() => {
+    if (isAuthenticated && !user) {
+      getUserInfo();
+    }
+  }, [isAuthenticated, user, getUserInfo]);
 
   /**
    * WebSocket 연결 설정 및 정리
@@ -267,10 +384,9 @@ const ChatBot = () => {
   const connectWebSocket = () => {
     try {
       console.log("Attempting to connect to WebSocket...");
-      // const wsUrl = process.env.REACT_APP_WEBSOCKET_URL;
-      const wsUrl = "ws://54.180.252.205:8001/ws/chat";
-      // const wsUrl = "ws://0.0.0.0:8009/ws/chat";
-      // const wsUrl = "ws://127.0.0.1:8009/ws/chat";
+      
+      const wsUrl = `ws://${common.Websocket_Domain}/ws/chat`;
+      
       if (!wsUrl) {
         throw new Error("WebSocket URL is not configured");
       }
@@ -283,116 +399,153 @@ const ChatBot = () => {
 
       // 메시지 수신 처리
       ws.current.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        if (data.type === "chat.message") {
-          setIsLoading(false); // 메시지를 수신하면 로딩 상태 해제
-          const response = data.message;
+        try {
+          // 먼저 일반 텍스트 메시지인지 확인
+          if (typeof event.data === 'string' && event.data.startsWith('서버')) {
+            // 서버 에러 메시지를 직접 처리
+            setMessages((prev) => [
+              ...prev,
+              {
+                id: `error_${Date.now()}`,
+                text: event.data,
+                sender: "bot",
+                timestamp: new Date().toISOString(),
+              },
+            ]);
+            setIsLoading(false);
+            return;
+          }
 
-          // 응답 데이터 포맷팅
-          const mainContent = [
-            response.mechanism,
-            response.evidence1,
-            response.evidence2,
-            response.lab_analysis,
-            response.final_advice,
-          ]
-            .filter(Boolean)
-            .join("\n\n");
+          // 기존 JSON 처리 로직
+          const data = JSON.parse(event.data);
+          
+          if (data.type === "chat.message") {
+            setIsLoading(false); // 메시지를 수신하면 로딩 상태 해제
+            const response = data.message;
+            
+            // 응답 데이터 포맷팅
+            const mainContent = [
+              response.mechanism,
+              response.evidence1,
+              response.evidence2,
+              response.lab_analysis,
+              response.final_advice,
+            ]
+              .filter(Boolean)
+              .join("\n\n");
 
-          // 참고문헌 정보 포맷팅
-          const references = response.references
-            ?.map(
-              (ref, index) =>
-                `[${index + 1}] ${ref.authors} (${ref.year}). ${ref.title}. ${
-                  ref.journal
-                }`
-            )
-            .join("\n");
+            // 참고문헌 정보 포맷팅
+            const references = response.references
+              ?.map((ref) => {
+                // URL이 있는 경우 클릭 가능한 링크로 만듦
+                const linkText = ref.url 
+                  ? `[${ref.id}] <a href="${ref.url}" target="_blank">${ref.url}</a>`
+                  : `[${ref.id}] ${ref.title}`;
+                
+                return linkText;
+              })
+              .join("\n");
 
-          // 최종 응답 텍스트 조합
-          const formattedText = references
-            ? `${mainContent}\n\n참고문헌:\n${references}`
-            : mainContent;
+            // 디버깅용 로그
+            console.log('포맷팅된 참고문헌:', references);
 
-          // 스트리밍 시작
-          setIsStreaming(true);
-          let currentText = "";
-          const textArray = formattedText.split("");
-          let currentIndex = 0;
+            // 최종 응답 텍스트 조합
+            const formattedText = references
+              ? `${mainContent}\n\n참고문헌:\n${references}`
+              : mainContent;
 
-          // 봇 응답 메시지 초기 상태 추가
-          const botMessageId = `bot_${Date.now()}`; // 고유 ID 생성
+            // 스트리밍 시작
+            setIsStreaming(true);
+            let currentText = "";
+            const textArray = formattedText.split("");
+            let currentIndex = 0;
+
+            // 봇 응답 메시지 초기 상태 추가
+            const botMessageId = `bot_${Date.now()}`; // 고유 ID 생성
+            setMessages((prev) => [
+              ...prev,
+              {
+                id: botMessageId,
+                text: "",
+                sender: "bot",
+                timestamp: new Date().toISOString(),
+              },
+            ]);
+
+            // 스트리밍 함수
+            const streamText = () => {
+              if (currentIndex < textArray.length) {
+                currentText += textArray[currentIndex];
+                setMessages((prev) =>
+                  prev.map((msg) =>
+                    msg.id === botMessageId ? { ...msg, text: currentText } : msg
+                  )
+                );
+                currentIndex++;
+                streamTimeoutRef.current = setTimeout(streamText, 20);
+              } else {
+                setIsStreaming(false);
+              }
+            };
+
+            streamText();
+          } else if (data.type === "chat.error") {
+            // 오류 처리
+            setIsLoading(false); // 로딩 상태 해제
+            const errorMessage = data.message; // 백엔드에서 전달된 오류 메시지
+
+            // 챗봇 대화 형식으로 오류 메시지 추가
+            const errorMessageId = `error_${Date.now()}`; // 고유 ID 생성
+            setMessages((prev) => [
+              ...prev,
+              {
+                id: errorMessageId,
+                text: "", // 초기 상태는 빈 문자열
+                sender: "bot",
+                timestamp: new Date().toISOString(),
+              },
+            ]);
+
+            // 스트리밍 시작
+            let currentErrorText = "";
+            const errorTextArray = errorMessage.split("");
+            let errorCurrentIndex = 0;
+
+            // 스트리밍 함수
+            const streamErrorText = () => {
+              if (errorCurrentIndex < errorTextArray.length) {
+                currentErrorText += errorTextArray[errorCurrentIndex];
+                setMessages((prev) =>
+                  prev.map((msg) =>
+                    msg.id === errorMessageId
+                      ? { ...msg, text: currentErrorText }
+                      : msg
+                  )
+                );
+                errorCurrentIndex++;
+                streamTimeoutRef.current = setTimeout(streamErrorText, 20);
+              }
+            };
+
+            streamErrorText(); // 오류 메시지 스트리밍 시작
+          } else if (data.type === "send.error") {
+            // send_error 처리
+            const errorMessage = data.message;
+            setIsLoading(false); // send_error에서 전달된 오류 메시지
+            alert(`오류 발생: ${errorMessage}`); // 사용자에게 알림으로 표시
+          }
+        } catch (error) {
+          // JSON 파싱 실패 시 원본 메시지를 그대로 표시
           setMessages((prev) => [
             ...prev,
             {
-              id: botMessageId,
-              text: "",
+              id: `error_${Date.now()}`,
+              text: event.data || "서버 처리 중 오류가 발생했습니다",
               sender: "bot",
               timestamp: new Date().toISOString(),
             },
           ]);
-
-          // 스트리밍 함수
-          const streamText = () => {
-            if (currentIndex < textArray.length) {
-              currentText += textArray[currentIndex];
-              setMessages((prev) =>
-                prev.map((msg) =>
-                  msg.id === botMessageId ? { ...msg, text: currentText } : msg
-                )
-              );
-              currentIndex++;
-              streamTimeoutRef.current = setTimeout(streamText, 20);
-            } else {
-              setIsStreaming(false);
-            }
-          };
-
-          streamText();
-        } else if (data.type === "chat.error") {
-          // 오류 처리
-          setIsLoading(false); // 로딩 상태 해제
-          const errorMessage = data.message; // 백엔드에서 전달된 오류 메시지
-
-          // 챗봇 대화 형식으로 오류 메시지 추가
-          const errorMessageId = `error_${Date.now()}`; // 고유 ID 생성
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: errorMessageId,
-              text: "", // 초기 상태는 빈 문자열
-              sender: "bot",
-              timestamp: new Date().toISOString(),
-            },
-          ]);
-
-          // 스트리밍 시작
-          let currentErrorText = "";
-          const errorTextArray = errorMessage.split("");
-          let errorCurrentIndex = 0;
-
-          // 스트리밍 함수
-          const streamErrorText = () => {
-            if (errorCurrentIndex < errorTextArray.length) {
-              currentErrorText += errorTextArray[errorCurrentIndex];
-              setMessages((prev) =>
-                prev.map((msg) =>
-                  msg.id === errorMessageId
-                    ? { ...msg, text: currentErrorText }
-                    : msg
-                )
-              );
-              errorCurrentIndex++;
-              streamTimeoutRef.current = setTimeout(streamErrorText, 20);
-            }
-          };
-
-          streamErrorText(); // 오류 메시지 스트리밍 시작
-        } else if (data.type === "send.error") {
-          // send_error 처리
-          const errorMessage = data.message;
-          setIsLoading(false); // send_error에서 전달된 오류 메시지
-          alert(`오류 발생: ${errorMessage}`); // 사용자에게 알림으로 표시
+          setIsLoading(false);
         }
       };
 
@@ -426,7 +579,8 @@ const ChatBot = () => {
    */
   const handleSendMessage = (e) => {
     e.preventDefault();
-    if (inputMessage.trim() === "") return;
+    // 로딩 중이거나 스트리밍 중일 때는 메시지 전송 방지
+    if (isLoading || isStreaming || inputMessage.trim() === "") return;
 
     // WebSocket 연결 상태 체크
     if (!ws.current || !isConnected) {
@@ -446,11 +600,11 @@ const ChatBot = () => {
     // 로딩 상태 설정
     setIsLoading(true); // 메시지를 전송하면 로딩 상태 설정
 
-    // WebSocket으로 메시지 전송
+    // WebSocket으로 메시지 전송 (실제 사용자 정보 사용)
     ws.current.send(
       JSON.stringify({
         message: inputMessage,
-        user_id: userId,
+        user_id: user.username, // 실제 사용자 username 사용
         type: "chat.message",
       })
     );
@@ -477,40 +631,36 @@ const ChatBot = () => {
 
   // 파일 업로드 처리
   const handleFileUpload = async (file, testDate) => {
+    setIsUploading(true);
     const formData = new FormData();
     formData.append("image", file);
     formData.append("test_date", testDate);
 
     try {
       const response = await fetch(
-        "http://127.0.0.1:8010//api/ocr/upload-blood-test/",
+        `http://${common.Llm_Domain}/api/ocr/upload-blood-test/`,
         {
           method: "POST",
           body: formData,
           headers: {
-            "X-CSRFToken": getCookie("csrftoken"), // CSRF 토큰 전송
+            "X-CSRFToken": getCookie("csrftoken"),
           },
           credentials: "same-origin",
         }
       );
 
-      // 응답이 JSON인지 확인
-      const contentType = response.headers.get("content-type");
       if (!response.ok) {
-        const errorData = await response.text(); // 오류 메시지를 텍스트로 읽기
+        const errorData = await response.text();
         throw new Error(errorData || "업로드 실패");
       }
 
-      if (contentType && contentType.includes("application/json")) {
-        const data = await response.json();
-        console.log("업로드 성공:", data);
-        setUploadResult(data); // 업로드 결과 상태 업데이트
-      } else {
-        throw new Error("서버에서 JSON 형식의 응답을 반환하지 않았습니다.");
-      }
+      setShowFileUploadModal(false);
+      setShowSuccessModal(true);
     } catch (error) {
       console.error("파일 업로드 오류:", error);
-      // 오류 처리 (예: 오류 메시지 표시)
+      alert(`파일 업로드에 실패했습니다: ${error.message}`);
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -549,6 +699,31 @@ const ChatBot = () => {
     }
   };
 
+  // CardContainer 클릭 핸들러 수정
+  const handleCardClick = () => {
+    setShowCards(false);
+    setIsRotated(false);
+    setShowFileUploadModal(true);
+  };
+
+  // 로딩 중일 때 메시지와 이모지 변경
+  useEffect(() => {
+    if (isLoading) {
+      const messageInterval = setInterval(() => {
+        setCurrentMessageIndex((prev) => (prev + 1) % loadingMessages.length);
+      }, 3000);
+
+      const emojiInterval = setInterval(() => {
+        setCurrentEmojiIndex((prev) => (prev + 1) % loadingEmojis.length);
+      }, 2000);
+
+      return () => {
+        clearInterval(messageInterval);
+        clearInterval(emojiInterval);
+      };
+    }
+  }, [isLoading]);
+
   return (
     <Contain>
       <Screen>
@@ -556,19 +731,28 @@ const ChatBot = () => {
           <ContentWrapper>
             <MessagePlace hasMessages={hasMessages}>
               {messages.map((message, index) => (
-                <MessageBubble key={index} sender={message.sender}>
-                  {message.text}
-                </MessageBubble>
+                <MessageBubble 
+                  key={index} 
+                  sender={message.sender}
+                  dangerouslySetInnerHTML={{ __html: message.text }}
+                />
               ))}
               <div ref={messageEndRef} />
             </MessagePlace>
 
+            {/* 기존 로딩 표시 대체 */}
             {isLoading && (
-              <div style={{ textAlign: "center", margin: "20px 0" }}>
-                <LoadingIcon /> {/* 회전하는 로딩 아이콘 */}
-                <p style={{ marginTop: "10px" }}>로딩 중...</p>{" "}
-                {/* 로딩 메시지 */}
-              </div>
+              <LoadingModalOverlay>
+                <LoadingModalContent>
+                  <LoadingEmoji>
+                    {loadingEmojis[currentEmojiIndex]}
+                  </LoadingEmoji>
+                  <LoadingMessage>
+                    {loadingMessages[currentMessageIndex]}
+                  </LoadingMessage>
+                  <LoadingProgress />
+                </LoadingModalContent>
+              </LoadingModalOverlay>
             )}
 
             {showUserInfoModal && (
@@ -578,19 +762,28 @@ const ChatBot = () => {
               />
             )}
             {showFileUploadModal && (
-              <Modal>
+              <Modal >
                 <ModalContent>
                   <BackButton onClick={() => setShowFileUploadModal(false)}>
                     <FaArrowLeft /> 뒤로가기
                   </BackButton>
                   <h2>혈액 검사 결과 업로드</h2>
                   <form
+                    id="uploadForm"
                     onSubmit={(e) => {
                       e.preventDefault();
-                      const fileInput = e.target.elements.imageFile.files[0];
-                      const testDate = e.target.elements.testDate.value;
-                      handleFileUpload(fileInput, testDate);
-                      setShowFileUploadModal(false); // 업로드 후 모달 닫기
+                      const fileInput = e.target.elements.imageFile;
+                      const testDate = e.target.elements.testDate;
+                      
+                      if (!fileInput.files[0]) {
+                        alert("파일을 선택해주세요.");
+                        return;
+                      }
+                      
+                      console.log("파일:", fileInput.files[0]);
+                      console.log("날짜:", testDate.value);
+                      
+                      handleFileUpload(fileInput.files[0], testDate.value);
                     }}
                   >
                     <FormGroup>
@@ -600,10 +793,7 @@ const ChatBot = () => {
                       <Input type="date" name="testDate" required />
                     </FormGroup>
                     <FormGroup>
-                      <label
-                        htmlFor="imageFile"
-                        style={{ marginRight: "10px" }}
-                      >
+                      <label htmlFor="imageFile" style={{ marginRight: "10px" }}>
                         이미지 파일
                       </label>
                       <Input
@@ -613,17 +803,39 @@ const ChatBot = () => {
                         required
                       />
                     </FormGroup>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                      <CancelButton type="button" onClick={() => setShowFileUploadModal(false)}>
+                        취소
+                      </CancelButton>
+                      <UploadButton type="submit">
+                        업로드
+                      </UploadButton>
+                    </div>
                   </form>
-                  <UploadButton type="submit">업로드</UploadButton>
                 </ModalContent>
               </Modal>
             )}
-            {/* 업로드 결과 표시 */}
-            {uploadResult && (
-              <div>
-                <h5>업로드 결과</h5>
-                <pre>{JSON.stringify(uploadResult, null, 2)}</pre>
-              </div>
+            {showSuccessModal && (
+              <Modal onClick={() => setShowSuccessModal(false)}>
+                <SuccessModal onClick={(e) => e.stopPropagation()}>
+                  <h3>업로드 완료</h3>
+                  <p>혈액 검사 결과가 성공적으로 업로드되었습니다.</p>
+                  <SuccessButton onClick={() => setShowSuccessModal(false)}>
+                    확인
+                  </SuccessButton>
+                </SuccessModal>
+              </Modal>
+            )}
+
+            {/* 로딩 모달 추가 */}
+            {isUploading && (
+              <LoadingModal>
+                <LoadingContent>
+                  <LoadingIcon />
+                  <h3>파일 업로드 중...</h3>
+                  <p>잠시만 기다려주세요.</p>
+                </LoadingContent>
+              </LoadingModal>
             )}
           </ContentWrapper>
           <PlusBtn hasMessages={hasMessages}>
@@ -634,7 +846,7 @@ const ChatBot = () => {
               <CardBox>
                 <CardSection show={showCards}>
                   <CardWrapper>
-                    <CardContainer onClick={() => setShowFileUploadModal(true)}>
+                    <CardContainer onClick={handleCardClick}>
                       <CardText>
                         혈액 검사 파일
                         <br />
@@ -650,24 +862,24 @@ const ChatBot = () => {
                   value={inputMessage}
                   onChange={(e) => {
                     setInputMessage(e.target.value);
-                    handleResizeHeight(); // 텍스트 영역 높이 조정
+                    handleResizeHeight();
                   }}
-                  onFocus={() => setPlaceholderVisible(false)} // 포커스 시 플레이스홀더 숨기기
+                  onFocus={() => setPlaceholderVisible(false)}
                   onBlur={() => {
                     if (inputMessage.trim() === "") {
-                      setPlaceholderVisible(true); // 입력값이 없으면 플레이스홀더 다시 표시
+                      setPlaceholderVisible(true);
                     }
                   }}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault(); // Enter 키의 기본 동작 방지
-                      handleSendMessage(e); // 메시지 전송 함수 호출
+                      e.preventDefault();
+                      if (!isLoading && !isStreaming) { // 로딩/스트리밍 중이 아닐 때만 전송
+                        handleSendMessage(e);
+                      }
                     }
                   }}
-                  placeholder={
-                    placeholderVisible ? "메시지를 입력하세요..." : ""
-                  }
-                  style={{ resize: "none" }} // 사용자가 수동으로 크기를 조정하지 못하도록 설정
+                  placeholder={placeholderVisible ? "메시지를 입력하세요..." : ""}
+                  style={{ resize: "none" }}
                 />
               </MessageTop>
 
@@ -682,8 +894,21 @@ const ChatBot = () => {
                   <RotatingIcon rotated={isRotated} />{" "}
                   {/* 회전 상태에 따라 아이콘 회전 */}
                 </SettingsIcon>
-                <SendWrap onClick={handleSendMessage}>
-                  <VscSend />
+
+                <SendWrap 
+                  onClick={handleSendMessage} 
+                  
+                >
+                   {(isLoading || isStreaming) ? (
+                    <InputLoadingIndicator>
+                      <span></span>
+                      <span></span>
+                      <span></span>
+                    </InputLoadingIndicator>
+                  ) : (
+                    <VscSend />
+                  )}
+                 
                 </SendWrap>
               </MessageBottom>
             </MessageSendBox>
